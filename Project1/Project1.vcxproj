@@ -155,7 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\MISC\C++ Libraries\glad.c" />
+    <ClCompile Include="..\..\..\..\Favorites\Desktop\MISC\C++ Libraries\glad.c" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
