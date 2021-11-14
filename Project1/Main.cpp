@@ -20,7 +20,7 @@ GLfloat vertices[] =
 	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
 	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
 	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5 f, 5.0f
 };
 
 // Indices for vertices order
@@ -34,6 +34,7 @@ GLuint indices[] =
 	3, 0, 4
 };
 */
+
 
 
 //width and height of the escreen
@@ -225,7 +226,7 @@ int main()
 
 
 	// Light color
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	float lightColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	// light and cube position
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 1.0f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
@@ -244,14 +245,14 @@ int main()
 	// Activating light shader program and cube shader program
 	lightShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
 	shaderProgram.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
-	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
 	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	basePlaneShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(basePlaneShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(baseModel));
-	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
 	
 
 	// TEXTURES STUFF (WIDTH, HEIGHT, COLOUR CHANNEL)
@@ -279,7 +280,7 @@ int main()
 
 	// Imgui variables and uniforms for shaders
 	bool drawCube = true;
-	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	float size = 1.0f;
 	float px = 0.0f;
 	float py = 0.0f;
@@ -380,11 +381,22 @@ int main()
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
 
+
+		// light colour
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+
 		// draw the base plane
 		grid.DrawGrid(basePlaneShader, camera);
 
 		// Activate light shader program inside the main loop and draw the light source
 		lightMesh.Draw(lightShader, camera);
+
+		// light colour
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
 
 		// wireframe mode on/off
 		if (!wireframeMode)
@@ -499,6 +511,7 @@ int main()
 			ImGui::SameLine();															// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
 			ImGui::ColorEdit4("Color", color);											// change colour
+			ImGui::ColorEdit4("Light color", lightColor);								// change light colour
 			ImGui::SliderFloat("Size", &size, 0.0f, 2.0f);								// change size
 			ImGui::SliderFloat("Position X", &px, -4.0f, 4.0f);							// change position X
 			ImGui::SliderFloat("Position Y", &py, -4.0f, 4.0f);							// change position Y
