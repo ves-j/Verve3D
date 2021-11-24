@@ -6,6 +6,7 @@ c:\users\ehsan\documents\github\verve\project1\x64\debug\vao.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\texture.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\stb.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\shaderclass.obj
+c:\users\ehsan\documents\github\verve\project1\x64\debug\model.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\mesh.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\main.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\imgui_widgets.obj
@@ -17,8 +18,8 @@ c:\users\ehsan\documents\github\verve\project1\x64\debug\imgui_demo.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\imgui.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\ebo.obj
 c:\users\ehsan\documents\github\verve\project1\x64\debug\camera.obj
-c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.exe
 c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.ilk
+c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.exe
 c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.pdb
 c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.tlog\cl.command.1.tlog
 c:\users\ehsan\documents\github\verve\project1\x64\debug\project1.tlog\cl.read.1.tlog

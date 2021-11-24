@@ -3,140 +3,118 @@
 // Outputs colors in RGBA
 out vec4 FragColor;
 
-
-// Imports the current position of the mesh from the Vertex Shader
+// Imports the current position from the Vertex Shader
 in vec3 crntPos;
-
 // Imports the normal from the Vertex Shader
 in vec3 Normal;
-
-// Inputs the color from the Vertex Shader
-//in vec3 color;
-
-// Inputs the texture coordinates from the Vertex Shader
+// Imports the color from the Vertex Shader
+in vec3 color;
+// Imports the texture coordinates from the Vertex Shader
 in vec2 texCoord;
 
 
 
-// Gets the Texture Unit from the main function
+// Gets the Texture Units from the main function
 uniform sampler2D diffuse0;
 uniform sampler2D specular0;
-
-// Imgui uniforms
-uniform int textureOn;
-uniform vec4 color;
-
-
 // Gets the color of the light from the main function
 uniform vec4 lightColor;
-
 // Gets the position of the light from the main function
 uniform vec3 lightPos;
-
-// Gets the recent position of the camera
+// Gets the position of the camera from the main function
 uniform vec3 camPos;
 
+
+uniform int textureOn;
+uniform vec4 meshCol;
 // Type of light selected
 uniform int lightType;
 
 
-
 vec4 pointLight()
-{
+{	
+	// used in two variables so I calculate it here to not have to do it twice
 	vec3 lightVec = lightPos - crntPos;
+
+	// intensity of light with respect to distance
 	float dist = length(lightVec);
 	float a = 3.0;
 	float b = 0.7;
-	float intensity = 1.0f / (a * dist * dist + b * dist + 1.0f);						// quadratic equation for point light in computer graphics
+	float inten = 1.0f / (a * dist * dist + b * dist + 1.0f);
 
-
-	// ambient
-	float ambient = 0.4f;
+	// ambient lighting
+	float ambient = 0.20f;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);													// normalize() gives you the direction of a vector whereas length() gives you length of a vector
-	vec3 lightDirection = normalize(lightVec);											// normalize() — calculates the unit vector (length 1) in the same direction as the original vector
-	float diffuse = max(dot(normal, lightDirection), 0.0f);								// dot product (multiplying vectors) is to get normal numbers (scalar) instead of vectors
-																						// dot product gives you the angle (space) between two vectors
+	vec3 normal = normalize(Normal);
+	vec3 lightDirection = normalize(lightVec);
+	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
-
-	// specular lighting (depended on camera angle)
-	float specularLight = 0.50f;														// intensity of specular light
-	vec3 viewDirection = normalize(camPos - crntPos);									// view from camera to mesh (camera -> mesh)
-	vec3 reflectionDirection = reflect(-lightDirection, normal);						// This is how we reflect the light on the surface of the mesh
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);		// *Calculating how much specular light we have at a certain angle of the
-																						// camera (larger angle between view direction = weaker specular)
+	// specular lighting
+	float specularLight = 0.50f;
+	vec3 viewDirection = normalize(camPos - crntPos);
+	vec3 reflectionDirection = reflect(-lightDirection, normal);
+	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
 	float specular = specAmount * specularLight;
 
-	return (texture(diffuse0, texCoord) * (diffuse * intensity + ambient) + texture(specular0, texCoord).r * specular * intensity) * lightColor;
+	return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
 }
 
-
-
-
-// Directional light always has static light direction light sun rays
-vec4 directionalLight()
+vec4 direcLight()
 {
-	// ambient
-	float ambient = 0.4f;
+	// ambient lighting
+	float ambient = 0.20f;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);													// normalize() gives you the direction of a vector whereas length() gives you length of a vector
-	vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));							// normalize() — calculates the unit vector (length 1) in the same direction as the original vector
-	float diffuse = max(dot(normal, lightDirection), 0.0f);								// dot product (multiplying vectors) is to get normal numbers (scalar) instead of vectors
+	vec3 normal = normalize(Normal);
+	vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));
+	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
-
-	// specular lighting (depended on camera angle)
-	float specularLight = 0.50f;														// intensity of specular light
-	vec3 viewDirection = normalize(camPos - crntPos);									// view from camera to mesh (camera -> mesh)
-	vec3 reflectionDirection = reflect(-lightDirection, normal);						// This is how we reflect the light on the surface of the mesh
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);		// *Calculating how much specular light we have at a certain angle of the
-																						// camera (larger angle between view direction = weaker specular)
+	// specular lighting
+	float specularLight = 0.50f;
+	vec3 viewDirection = normalize(camPos - crntPos);
+	vec3 reflectionDirection = reflect(-lightDirection, normal);
+	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
 	float specular = specAmount * specularLight;
 
 	return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
 }
 
-
-
-// for spot light, you need two cones to make the rounds smooth
 vec4 spotLight()
 {
-	float outerCone = 0.90f;															// this is the cosine value of the angles to cut off extra calculations
+	// controls how big the area that is lit up is
+	float outerCone = 0.90f;
 	float innerCone = 0.95f;
 
-
-	// ambient
-	float ambient = 0.4f;
-
+	// ambient lighting
+	float ambient = 0.20f;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);													// normalize() gives you the direction of a vector whereas length() gives you length of a vector
-	vec3 lightDirection = normalize(lightPos - crntPos);								// normalize() — calculates the unit vector (length 1) in the same direction as the original vector
-	float diffuse = max(dot(normal, lightDirection), 0.0f);								// dot product (multiplying vectors) is to get normal numbers (scalar) instead of vectors
+	vec3 normal = normalize(Normal);
+	vec3 lightDirection = normalize(lightPos - crntPos);
+	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
-
-	// specular lighting (depended on camera angle)
-	float specularLight = 0.50f;														// intensity of specular light
-	vec3 viewDirection = normalize(camPos - crntPos);									// view from camera to mesh (camera -> mesh)
-	vec3 reflectionDirection = reflect(-lightDirection, normal);						// This is how we reflect the light on the surface of the mesh
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);		// *Calculating how much specular light we have at a certain angle of the
-																						// camera (larger angle between view direction = weaker specular)
+	// specular lighting
+	float specularLight = 0.50f;
+	vec3 viewDirection = normalize(camPos - crntPos);
+	vec3 reflectionDirection = reflect(-lightDirection, normal);
+	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
 	float specular = specAmount * specularLight;
 
-	float angle = dot(vec3(0.0f, -1.0f, 0.0f), -lightDirection);						// calculating the central angle using dot product
+	// calculates the intensity of the crntPos based on its angle to the center of the light cone
+	float angle = dot(vec3(0.0f, -1.0f, 0.0f), -lightDirection);
+	float inten = clamp((angle - outerCone) / (innerCone - outerCone), 0.0f, 1.0f);
 
-	float intensity = clamp((angle - outerCone) / (innerCone - outerCone), 0.0f, 1.0f);	// how intense the light will be based on the position of the mesh
-
-	return (texture(diffuse0, texCoord) * (diffuse * intensity + ambient) + texture(specular0, texCoord).r * specular * intensity) * lightColor;
+	return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
 }
 
 
 void main()
 {
+	// outputs final color
 	if (textureOn == 1)
 	{
-		FragColor = pointLight();
+		FragColor = direcLight();
 
 		if (lightType == 0)
 		{
@@ -145,19 +123,18 @@ void main()
 		
 		if (lightType == 1)
 		{
-			FragColor = directionalLight();
+			FragColor = direcLight();
 		}
 
 		if (lightType == 2)
 		{
 			FragColor = spotLight();
 		}
-		
 	}
-	
+
 	if (textureOn != 1)
 	{
-		FragColor = color;
+		FragColor = meshCol;
 	}
 	
 }

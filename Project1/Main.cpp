@@ -1,3 +1,8 @@
+//------- Ignore this ----------
+#include<filesystem>
+namespace fs = std::filesystem;
+//------------------------------
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -11,6 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include"Mesh.h"
+#include"Model.h"
 
 
 /*
@@ -198,8 +204,8 @@ int main()
 
 	Texture textures[]
 	{
-		Texture("planks.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
-		Texture("planksSpec.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)
+		Texture("planks.png", "diffuse", 0),
+		Texture("planksSpec.png", "specular", 1)
 	};
 
 	// Generates Shader object using shaders defualt.vert and default.frag + light
@@ -226,7 +232,7 @@ int main()
 
 
 	// Light color
-	float lightColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
+	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);	// this is mesh colour
 	// light and cube position
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 1.0f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
@@ -245,14 +251,16 @@ int main()
 	// Activating light shader program and cube shader program
 	lightShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+
 	shaderProgram.Activate();
-	glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
-	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	//glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
+	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
 	basePlaneShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(basePlaneShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(baseModel));
-	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	
 
 	// TEXTURES STUFF (WIDTH, HEIGHT, COLOUR CHANNEL)
@@ -281,12 +289,12 @@ int main()
 	// Imgui variables and uniforms for shaders
 	bool drawCube = true;
 	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
-	float size = 1.0f;
+	float size = 0.05f;
 	float px = 0.0f;
 	float py = 0.0f;
 	float pz = 0.0f;
 	bool textureBool = false;
-	int textureOn = 0;
+	int textureOn = 1;
 	bool wireframeMode = false;
 
 	// camera variables
@@ -296,7 +304,7 @@ int main()
 
 
 	// sending data to uniforms in shaders
-	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "color"), color[0], color[1], color[2], color[3]);
+	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "meshCol"), color[0], color[1], color[2], color[3]);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "size"), size);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "py"), py);
@@ -334,6 +342,12 @@ int main()
 	int lightType = 0;
 
 
+	std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
+	std::string modelPath = "Model/gun/scene.gltf";
+
+	// Load in a model
+	Model model((modelPath).c_str());
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -360,8 +374,10 @@ int main()
 		if (drawCube)
 		{
 			// Draw primitives, number of indices, datatype of indices, index of indices
-			floor.Draw(shaderProgram, camera);
+			//floor.Draw(shaderProgram, camera);
+			model.Draw(shaderProgram, camera);
 		}
+
 		// for texture on and off
 		if (textureBool)
 		{
@@ -371,9 +387,11 @@ int main()
 		{
 			textureOn = 0;
 		}
+		// Draw a model
+		
 
 		// sending data to uniforms in shaders
-		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "color"), color[0], color[1], color[2], color[3]);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "meshCol"), color[0], color[1], color[2], color[3]);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "size"), size);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "py"), py);
@@ -383,20 +401,20 @@ int main()
 
 
 		// light colour
-		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
-		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
-		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
 		// draw the base plane
 		grid.DrawGrid(basePlaneShader, camera);
 
 		// Activate light shader program inside the main loop and draw the light source
-		lightMesh.Draw(lightShader, camera);
+		//lightMesh.Draw(lightShader, camera);
 
 		// light colour
-		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
-		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
-		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
 		// wireframe mode on/off
 		if (!wireframeMode)
@@ -511,11 +529,11 @@ int main()
 			ImGui::SameLine();															// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
 			ImGui::ColorEdit4("Color", color);											// change colour
-			ImGui::ColorEdit4("Light color", lightColor);								// change light colour
-			ImGui::SliderFloat("Size", &size, 0.0f, 2.0f);								// change size
-			ImGui::SliderFloat("Position X", &px, -4.0f, 4.0f);							// change position X
-			ImGui::SliderFloat("Position Y", &py, -4.0f, 4.0f);							// change position Y
-			ImGui::SliderFloat("Position Z", &pz, -4.0f, 4.0f);							// change position Z
+			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
+			ImGui::SliderFloat("Size", &size, 0.0f, 100.0f);								// change size
+			ImGui::SliderFloat("Position X", &px, -50.0f, 50.0f);							// change position X
+			ImGui::SliderFloat("Position Y", &py, -50.0f, 50.0f);							// change position Y
+			ImGui::SliderFloat("Position Z", &pz, -50.0f, 50.0f);							// change position Z
 			ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
 			ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
 			ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
