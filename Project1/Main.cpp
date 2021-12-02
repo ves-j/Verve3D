@@ -8,6 +8,7 @@ namespace fs = std::filesystem;
 #include "imgui/imgui_impl_opengl3.h"
 
 #include <iostream>
+#include <Windows.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
@@ -17,6 +18,7 @@ namespace fs = std::filesystem;
 
 #include"Mesh.h"
 #include"Model.h"
+
 
 
 /*
@@ -63,7 +65,7 @@ GLuint indices[] =
 	0, 2, 3,
 };
 
-// Base plane
+// Base plane grid
 Vertex baseVertices[] =
 {
 	// Up to down			
@@ -140,12 +142,12 @@ Vertex lightVertices[] =
 { //     COORDINATES     //
 	Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
-	Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
-	Vertex{glm::vec3(0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3( 0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3( 0.1f, -0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f,  0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f,  0.1f, -0.1f)},
-	Vertex{glm::vec3(0.1f,  0.1f, -0.1f)},
-	Vertex{glm::vec3(0.1f,  0.1f,  0.1f)}
+	Vertex{glm::vec3( 0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3( 0.1f,  0.1f,  0.1f)}
 };
 
 GLuint lightIndices[] =
@@ -163,6 +165,52 @@ GLuint lightIndices[] =
 	4, 5, 6,
 	4, 6, 7
 };
+
+//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
+std::wstring src;
+std::string modelPath = "Model/jinx/scene.gltf";
+OPENFILENAME ofn;       // common dialog box structure
+char szFile[_MAX_PATH] = "";       // buffer for file name
+HWND hwnd = NULL;              // owner window
+HANDLE hf;              // file handle
+
+
+void FileOpen()
+{
+	// Initialize OPENFILENAME
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hwnd;
+	ofn.lpstrFile = (LPWSTR)szFile;
+	//
+	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+	// use the contents of szFile to initialize itself.
+	//
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = TEXT("All\0*.*\0*gltf\0*.gltf\0");
+	
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+
+	// Display the Open dialog box. 
+
+	if (GetOpenFileName(&ofn) == TRUE)
+	{
+		//hf = CreateFile(ofn.lpstrFile, GENERIC_READ,0, (LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE)NULL);
+		MessageBox(NULL, ofn.lpstrFile, (LPWSTR)"File Name", MB_OK);
+		modelPath = szFile;
+
+		
+		std::cout << szFile << std::endl;
+		//Model model((modelPath).c_str());
+	}
+
+};
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -202,39 +250,39 @@ int main()
 	gladLoadGL();
 
 
-	Texture textures[]
+	/*Texture textures[]
 	{
 		Texture("planks.png", "diffuse", 0),
 		Texture("planksSpec.png", "specular", 1)
-	};
+	};*/
 
 	// Generates Shader object using shaders defualt.vert and default.frag + light
 	Shader shaderProgram("default.vert", "default.frag");
 	// Store mesh data in vectors for the mesh
 	std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
 	std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
-	std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
+	//std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
 	// Create floor mesh
-	Mesh floor(verts, ind, tex);
+	//Mesh floor(verts, ind, tex);
 
 	// grid VAO, VBO, EBO
 	Shader basePlaneShader("base.vert", "base.frag");
 	std::vector <Vertex> BaseVerts(baseVertices, baseVertices + sizeof(baseVertices) / sizeof(Vertex));
 	std::vector <GLuint> BaseInds(baseIndices, baseIndices + sizeof(baseIndices) / sizeof(GLuint));
-	Mesh grid(BaseVerts, BaseInds, tex);
+	Mesh grid(BaseVerts, BaseInds);
 
 
 	// LIGHT VAO, VBO, EBO
 	Shader lightShader("light.vert", "light.frag");
 	std::vector <Vertex> LightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
 	std::vector <GLuint> LightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
-	Mesh lightMesh(LightVerts, LightInd, tex);
+	Mesh lightMesh(LightVerts, LightInd);
 
 
 	// Light color
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);	// this is mesh colour
 	// light and cube position
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 1.0f);
+	glm::vec3 lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -254,7 +302,7 @@ int main()
 	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
 	shaderProgram.Activate();
-	//glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
+	glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
 	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
@@ -342,11 +390,12 @@ int main()
 	int lightType = 0;
 
 
-	std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
-	std::string modelPath = "Model/gun/scene.gltf";
+	
 
 	// Load in a model
 	Model model((modelPath).c_str());
+
+	
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -399,17 +448,11 @@ int main()
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
 
-
-		// light colour
-		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-
 		// draw the base plane
 		grid.DrawGrid(basePlaneShader, camera);
 
 		// Activate light shader program inside the main loop and draw the light source
-		//lightMesh.Draw(lightShader, camera);
+		lightMesh.DrawLight(lightShader, camera);
 
 		// light colour
 		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
@@ -510,6 +553,7 @@ int main()
 		{
 			if (ImGui::BeginMenu("File"))
 			{
+				if (ImGui::MenuItem("Open")) { FileOpen(); }
 				if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
 				ImGui::EndMenu();
 			}
@@ -530,7 +574,7 @@ int main()
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
 			ImGui::ColorEdit4("Color", color);											// change colour
 			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
-			ImGui::SliderFloat("Size", &size, 0.0f, 100.0f);								// change size
+			ImGui::SliderFloat("Size", &size, 0.0f, 10.0f);								// change size
 			ImGui::SliderFloat("Position X", &px, -50.0f, 50.0f);							// change position X
 			ImGui::SliderFloat("Position Y", &py, -50.0f, 50.0f);							// change position Y
 			ImGui::SliderFloat("Position Z", &pz, -50.0f, 50.0f);							// change position Z
@@ -586,7 +630,7 @@ int main()
 
 		ImGui::Image((void*)framebufferTexture, ImVec2(w / 1.1, h - 55), ImVec2(0, 1), ImVec2(1, 0));
 
-		std::cout << "Camera(" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
+		//std::cout << "Camera(" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
 
 		ImGui::End();
 
