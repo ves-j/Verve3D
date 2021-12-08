@@ -8,7 +8,8 @@ namespace fs = std::filesystem;
 #include "imgui/imgui_impl_opengl3.h"
 
 #include <iostream>
-#include <Windows.h>
+#include <imfilebrowser/imfilebrowser.h>
+#include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
@@ -166,48 +167,13 @@ GLuint lightIndices[] =
 	4, 6, 7
 };
 
-//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
-std::wstring src;
-std::string modelPath = "Model/jinx/scene.gltf";
-OPENFILENAME ofn;       // common dialog box structure
-char szFile[_MAX_PATH] = "";       // buffer for file name
-HWND hwnd = NULL;              // owner window
-HANDLE hf;              // file handle
 
+
+// (optional) set browser properties
 
 void FileOpen()
 {
-	// Initialize OPENFILENAME
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hwnd;
-	ofn.lpstrFile = (LPWSTR)szFile;
-	//
-	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
-	// use the contents of szFile to initialize itself.
-	//
-	ofn.lpstrFile[0] = '\0';
-	ofn.nMaxFile = sizeof(szFile);
-	ofn.lpstrFilter = TEXT("All\0*.*\0*gltf\0*.gltf\0");
 	
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFileTitle = NULL;
-	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = NULL;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-
-	// Display the Open dialog box. 
-
-	if (GetOpenFileName(&ofn) == TRUE)
-	{
-		//hf = CreateFile(ofn.lpstrFile, GENERIC_READ,0, (LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,(HANDLE)NULL);
-		MessageBox(NULL, ofn.lpstrFile, (LPWSTR)"File Name", MB_OK);
-		modelPath = szFile;
-
-		
-		std::cout << szFile << std::endl;
-		//Model model((modelPath).c_str());
-	}
 
 };
 
@@ -334,6 +300,14 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 
+	// create a file browser instance
+	ImGui::FileBrowser fileDialog;
+
+	// (optional) set browser properties
+	fileDialog.SetTitle("title");
+	fileDialog.SetTypeFilters({ ".gltf"});
+
+
 	// Imgui variables and uniforms for shaders
 	bool drawCube = true;
 	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
@@ -391,6 +365,8 @@ int main()
 
 
 	
+	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
+	std::string modelPath = "Model/test/scene.gltf";
 
 	// Load in a model
 	Model model((modelPath).c_str());
@@ -411,6 +387,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// Enable depth testing since it's disabled when drawing the framebuffer rectangle
 		glEnable(GL_DEPTH_TEST);
+
 
 		// Camera input handleing
 		camera.Inputs(window);
@@ -436,7 +413,6 @@ int main()
 		{
 			textureOn = 0;
 		}
-		// Draw a model
 		
 
 		// sending data to uniforms in shaders
@@ -553,13 +529,27 @@ int main()
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Open")) { FileOpen(); }
+				if (ImGui::MenuItem("Open")) { fileDialog.Open(); }
 				if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
 		}
+
+		fileDialog.Display();
+
+		if (fileDialog.HasSelected())
+		{
+			std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+			modelPath = fileDialog.GetSelected().string();
+			std::cout << "Model path before edit: " << modelPath << std::endl;
+			std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
+			std::cout << "Model path after edit: " << modelPath << std::endl;
+			// Load in a model
+			fileDialog.ClearSelected();
+		}
+		
 
 		// ImGui contents (docking)
 		ImGui::Begin("Attributes");													// imgui begin and title
