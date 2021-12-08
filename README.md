@@ -1,12 +1,25 @@
 # Verve
+This is my first attempt at making a 3D rendering engine usgin OpenGL 3.3, GLFW and ImGui. </br>
+There are two branches for this project:
+<ul>
+  <li>Main</li>
+    <ul>
+    <li>Importing GLTF models from JSON file</li>
+    </ul> 
+  <li>Assimp</li>
+  <ul>
+    <li>Importing modern model formats using Assimp library</li>
+    </ul> 
+</ul> 
+
 <h2>TODO:</h2>
-<ol>
+<ul>
   <li>Model importer - DONE</li>
   <li>Post-processing stuff - OnGoing</li>
   <li>Scene graph</li>
   <li>PBR</li>
   <li>Physics stuff</li>
-</ol> 
+</ul> 
 
 <h2>HOW TO BUILD: (Visual Studio verison)</h2>
 <ol>
