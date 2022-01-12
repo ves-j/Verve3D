@@ -3,6 +3,7 @@
 namespace fs = std::filesystem;
 //------------------------------
 
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -16,6 +17,7 @@ namespace fs = std::filesystem;
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 
 #include"Mesh.h"
 #include"Model.h"
@@ -167,16 +169,8 @@ GLuint lightIndices[] =
 	4, 6, 7
 };
 
-
-
-// (optional) set browser properties
-
-void FileOpen()
-{
-	
-
-};
-
+// create a file browser instance
+ImGui::FileBrowser fileDialog;
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -224,6 +218,7 @@ int main()
 
 	// Generates Shader object using shaders defualt.vert and default.frag + light
 	Shader shaderProgram("default.vert", "default.frag");
+	Shader outliningProgram("outlining.vert", "outlining.frag");
 	// Store mesh data in vectors for the mesh
 	std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
 	std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
@@ -284,6 +279,9 @@ int main()
 
 	// to invert texture as STB reads X and Y differently from GLFW
 	glEnable(GL_DEPTH_TEST);
+	// enabling stencil buffer for object outlining
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// Camera object for viewign the model
 	Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 1.0f, 5.0f));
@@ -300,29 +298,27 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 
-	// create a file browser instance
-	ImGui::FileBrowser fileDialog;
-
 	// (optional) set browser properties
 	fileDialog.SetTitle("title");
-	fileDialog.SetTypeFilters({ ".gltf"});
+	fileDialog.SetTypeFilters({ ".gltf" });
 
 
 	// Imgui variables and uniforms for shaders
-	bool drawCube = true;
-	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
-	float size = 0.05f;
-	float px = 0.0f;
-	float py = 0.0f;
-	float pz = 0.0f;
-	bool textureBool = false;
-	int textureOn = 1;
-	bool wireframeMode = false;
+	bool	drawCube = true;
+	bool	modelOutline = false;
+	float	color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
+	float	size = 0.05f;
+	float	px = 0.0f;
+	float	py = 0.0f;
+	float	pz = 0.0f;
+	bool	textureBool = false;
+	int		textureOn = 1;
+	bool	wireframeMode = false;
 
 	// camera variables
-	float field_of_view = 45.0f;
-	float near_plane = 0.1f;
-	float far_plane = 100.0f;
+	float	field_of_view = 45.0f;
+	float	near_plane = 0.1f;
+	float	far_plane = 100.0f;
 
 
 	// sending data to uniforms in shaders
@@ -363,28 +359,36 @@ int main()
 	static const char* current_item = "Point";
 	int lightType = 0;
 
+	bool hasModel = false;
 
-	
+	// MODEL LOADING
 	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
 	std::string modelPath = "Model/test/scene.gltf";
 
-	// Load in a model
-	Model model((modelPath).c_str());
-
+	//Model model((modelPath).c_str());
 	
+	Model* model;
+	model = new Model((modelPath).c_str());
+	modelPath = "";
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 
+		//if (modelPath != "")
+		//{
+		//	//Model model((modelPath).c_str());
+		//	model1->Load((modelPath).c_str());
+		//	modelPath = "";
+		//}
 
 		// Bind the custom framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		// Specify the color of the background
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		// Clean the back buffer and depth buffer
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		// Enable depth testing since it's disabled when drawing the framebuffer rectangle
 		glEnable(GL_DEPTH_TEST);
 
@@ -394,14 +398,28 @@ int main()
 
 		// Sending view and projection to shader
 		camera.updateMatrix(field_of_view, near_plane, far_plane);
-		
 
+		
+		
 		// if drawCube is true draw the cube
 		if (drawCube)
 		{
 			// Draw primitives, number of indices, datatype of indices, index of indices
 			//floor.Draw(shaderProgram, camera);
-			model.Draw(shaderProgram, camera);
+			// Make it so the stencil test always passes
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			// Enable modifying of the stencil buffer
+			glStencilMask(0xFF);
+			// Draw the normal model
+			model->Draw(shaderProgram, camera);
+
+			// Make it so only the pixels without the value 1 pass the test
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			// Disable modifying of the stencil buffer
+			glStencilMask(0x00);
+			// Disable the depth buffer
+			glDisable(GL_DEPTH_TEST);
+			
 		}
 
 		// for texture on and off
@@ -413,6 +431,7 @@ int main()
 		{
 			textureOn = 0;
 		}
+		
 		
 
 		// sending data to uniforms in shaders
@@ -445,6 +464,16 @@ int main()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 		
+		if (modelOutline)
+		{
+			outliningProgram.Activate();
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "outlining"), 0.1f);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "size"), size);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "px"), px);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "py"), py);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "pz"), pz);
+			model->Draw(outliningProgram, camera);
+		}
 
 		//Imgui frames
 		ImGui_ImplOpenGL3_NewFrame();
@@ -538,7 +567,6 @@ int main()
 		}
 
 		fileDialog.Display();
-
 		if (fileDialog.HasSelected())
 		{
 			std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
@@ -546,15 +574,17 @@ int main()
 			std::cout << "Model path before edit: " << modelPath << std::endl;
 			std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 			std::cout << "Model path after edit: " << modelPath << std::endl;
-			// Load in a model
+
 			fileDialog.ClearSelected();
 		}
+		
 		
 
 		// ImGui contents (docking)
 		ImGui::Begin("Attributes");													// imgui begin and title
 
 		ImGui::Checkbox("Draw Cube", &drawCube);									// draw cube
+		
 
 		if (drawCube)
 		{
@@ -562,6 +592,7 @@ int main()
 			ImGui::Checkbox("Texture", &textureBool);									// enable texture
 			ImGui::SameLine();															// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
+			ImGui::Checkbox("Model outline", &modelOutline);									// draw cube
 			ImGui::ColorEdit4("Color", color);											// change colour
 			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
 			ImGui::SliderFloat("Size", &size, 0.0f, 10.0f);								// change size
@@ -644,6 +675,12 @@ int main()
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
+		// Enable modifying of the stencil buffer
+		glStencilMask(0xFF);
+		// Clear stencil buffer
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		// Enable the depth buffer
+		glEnable(GL_DEPTH_TEST);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -662,6 +699,7 @@ int main()
 
 	// Delete all the objects we've created
 	shaderProgram.Delete();
+	outliningProgram.Delete();
 	basePlaneShader.Delete();
 	lightShader.Delete();
 

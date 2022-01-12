@@ -14,6 +14,20 @@ Model::Model(const char* file)
 	traverseNode(0);
 }
 
+void Model::Load(const char* file)
+{
+	// Make a JSON object
+	std::string text = get_file_contents(file);
+	JSON = json::parse(text);
+
+	// Get the binary data
+	Model::file = file;
+	data = getData();
+
+	// Traverse all nodes
+	traverseNode(0);
+}
+
 void Model::Draw(Shader& shader, Camera& camera)
 {
 	// Go over all meshes and draw each one
