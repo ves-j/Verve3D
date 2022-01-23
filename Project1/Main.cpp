@@ -363,7 +363,7 @@ int main()
 
 	// MODEL LOADING
 	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
-	std::string modelPath = "Model/test/scene.gltf";
+	std::string modelPath = "Model/jinx/scene.gltf";
 
 	//Model model((modelPath).c_str());
 	
@@ -399,7 +399,11 @@ int main()
 		// Sending view and projection to shader
 		camera.updateMatrix(field_of_view, near_plane, far_plane);
 
-		
+		// draw the base plane
+		grid.DrawGrid(basePlaneShader, camera);
+
+		// Activate light shader program inside the main loop and draw the light source
+		lightMesh.DrawLight(lightShader, camera);
 		
 		// if drawCube is true draw the cube
 		if (drawCube)
@@ -443,11 +447,7 @@ int main()
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
 
-		// draw the base plane
-		grid.DrawGrid(basePlaneShader, camera);
 
-		// Activate light shader program inside the main loop and draw the light source
-		lightMesh.DrawLight(lightShader, camera);
 
 		// light colour
 		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
@@ -474,6 +474,8 @@ int main()
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "pz"), pz);
 			model->Draw(outliningProgram, camera);
 		}
+
+		
 
 		//Imgui frames
 		ImGui_ImplOpenGL3_NewFrame();
@@ -570,10 +572,13 @@ int main()
 		if (fileDialog.HasSelected())
 		{
 			std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+			drawCube = false;
 			modelPath = fileDialog.GetSelected().string();
 			std::cout << "Model path before edit: " << modelPath << std::endl;
 			std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
 			std::cout << "Model path after edit: " << modelPath << std::endl;
+			model = new Model((modelPath).c_str());
+			drawCube = true;
 
 			fileDialog.ClearSelected();
 		}
