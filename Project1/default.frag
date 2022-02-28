@@ -17,6 +17,7 @@ in vec2 texCoord;
 // Gets the Texture Units from the main function
 uniform sampler2D diffuse0;
 uniform sampler2D specular0;
+uniform sampler2D normal0;
 // Gets the color of the light from the main function
 uniform vec4 lightColor;
 // Gets the position of the light from the main function
@@ -46,7 +47,7 @@ vec4 pointLight()
 	float ambient = 0.70f;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);
+	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
 	vec3 lightDirection = normalize(lightVec);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 

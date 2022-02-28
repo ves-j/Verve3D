@@ -220,8 +220,8 @@ int main()
 	Shader shaderProgram("default.vert", "default.frag");
 	Shader outliningProgram("outlining.vert", "outlining.frag");
 	// Store mesh data in vectors for the mesh
-	std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
-	std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
+	//std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
+	//std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
 	//std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
 	// Create floor mesh
 	//Mesh floor(verts, ind, tex);
@@ -304,13 +304,18 @@ int main()
 
 
 	// Imgui variables and uniforms for shaders
-	bool	drawCube = true;
+	bool	drawCube = false;
 	bool	modelOutline = false;
 	float	color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	float	size = 0.05f;
 	float	px = 0.0f;
 	float	py = 0.0f;
 	float	pz = 0.0f;
+
+	float	rx = 0.0f;
+	float	ry = 0.0f;
+	float	rz = 0.0f;
+
 	bool	textureBool = false;
 	int		textureOn = 1;
 	bool	wireframeMode = false;
@@ -363,13 +368,20 @@ int main()
 
 	// MODEL LOADING
 	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
-	std::string modelPath = "Model/jinx/scene.gltf";
+	std::string modelPath = "Model/test/scene.gltf";
 
 	//Model model((modelPath).c_str());
 	
 	Model* model;
 	model = new Model((modelPath).c_str());
-	modelPath = "";
+
+	// Enable depth testing since it's disabled when drawing the framebuffer rectangle
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glFrontFace(GL_CW);
+
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -389,8 +401,7 @@ int main()
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		// Enable depth testing since it's disabled when drawing the framebuffer rectangle
-		glEnable(GL_DEPTH_TEST);
+		
 
 
 		// Camera input handleing
@@ -414,16 +425,19 @@ int main()
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			// Enable modifying of the stencil buffer
 			glStencilMask(0xFF);
+
+
 			// Draw the normal model
 			model->Draw(shaderProgram, camera);
+
 
 			// Make it so only the pixels without the value 1 pass the test
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 			// Disable modifying of the stencil buffer
 			glStencilMask(0x00);
-			// Disable the depth buffer
-			glDisable(GL_DEPTH_TEST);
-			
+			// Disable the depth buffer (can see the model through anything)
+			//glDisable(GL_DEPTH_TEST);
+	
 		}
 
 		// for texture on and off
@@ -572,7 +586,12 @@ int main()
 		if (fileDialog.HasSelected())
 		{
 			std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+
+			// unload current model
+			textureBool = false;
 			drawCube = false;
+
+			// load new model path
 			modelPath = fileDialog.GetSelected().string();
 			std::cout << "Model path before edit: " << modelPath << std::endl;
 			std::replace(modelPath.begin(), modelPath.end(), '\\', '/');
@@ -588,22 +607,38 @@ int main()
 		// ImGui contents (docking)
 		ImGui::Begin("Attributes");													// imgui begin and title
 
-		ImGui::Checkbox("Draw Cube", &drawCube);									// draw cube
+		//ImGui::Checkbox("Draw Cube", &drawCube);									// draw cube
 		
 
 		if (drawCube)
 		{
-			ImGui::SameLine();															// draw the next component on the same line and previous
+			//ImGui::SameLine();														// draw the next component on the same line and previous
 			ImGui::Checkbox("Texture", &textureBool);									// enable texture
 			ImGui::SameLine();															// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
-			ImGui::Checkbox("Model outline", &modelOutline);									// draw cube
+			ImGui::Checkbox("Model outline", &modelOutline);							// chnga model colour
 			ImGui::ColorEdit4("Color", color);											// change colour
 			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
-			ImGui::SliderFloat("Size", &size, 0.0f, 10.0f);								// change size
-			ImGui::SliderFloat("Position X", &px, -50.0f, 50.0f);							// change position X
-			ImGui::SliderFloat("Position Y", &py, -50.0f, 50.0f);							// change position Y
-			ImGui::SliderFloat("Position Z", &pz, -50.0f, 50.0f);							// change position Z
+			ImGui::PushItemWidth(70);
+			ImGui::DragFloat("Size", &size, 0.01f, 0.0f);								// change size
+			
+			ImGui::DragFloat("X", &px, 0.05f, 0.1f);									// change position X
+			ImGui::SameLine();
+			ImGui::DragFloat("Y", &py, 0.05f, 0.1f);									// change position Y
+			ImGui::SameLine();
+			ImGui::DragFloat("Z", &pz, 0.05f, 0.1f);									// change position Z
+
+
+			ImGui::DragFloat("RX", &rx, 0.05f, 0.1f);									// change position X
+			ImGui::SameLine();
+			ImGui::DragFloat("RY", &ry, 0.05f, 0.1f);									// change position Y
+			ImGui::SameLine();
+			ImGui::DragFloat("RZ", &rz, 0.05f, 0.1f);									// change position Z
+
+
+
+			
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 			ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
 			ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
 			ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
@@ -637,6 +672,8 @@ int main()
 			{
 				lightType = 0;
 			}
+
+			ImGui::Button("Click me");
 			
 		}
 
@@ -703,6 +740,7 @@ int main()
 	ImGui::DestroyContext();
 
 	// Delete all the objects we've created
+	delete model;
 	shaderProgram.Delete();
 	outliningProgram.Delete();
 	basePlaneShader.Delete();

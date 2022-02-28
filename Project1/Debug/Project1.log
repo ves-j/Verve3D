@@ -1,0 +1,94 @@
+﻿  glad.c
+  Camera.cpp
+  EBO.cpp
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_impl_glfw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  Main.cpp
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Main.cpp(664,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Main.cpp(664,52): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Main.cpp(276,27): warning C4101: 'numColCh': unreferenced local variable
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Main.cpp(276,16): warning C4101: 'heightImg': unreferenced local variable
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Main.cpp(276,6): warning C4101: 'widthImg': unreferenced local variable
+  Mesh.cpp
+  Model.cpp
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Model.cpp(317,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Model.cpp(336,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Model.cpp(345,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Model.cpp(354,20): warning C4018: '<': signed/unsigned mismatch
+  shaderClass.cpp
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\shaderClass.cpp(11,27): warning C4244: 'argument': conversion from 'std::streamoff' to 'const unsigned int', possible loss of data
+  stb.cpp
+  Texture.cpp
+  VAO.cpp
+  VBO.cpp
+  Generating Code...
+Camera.obj : error LNK2019: unresolved external symbol _glfwSetInputMode referenced in function "public: void __thiscall Camera::Inputs(struct GLFWwindow *)" (?Inputs@Camera@@QAEXPAUGLFWwindow@@@Z)
+imgui_impl_glfw.obj : error LNK2001: unresolved external symbol _glfwSetInputMode
+Camera.obj : error LNK2019: unresolved external symbol _glfwGetKey referenced in function "public: void __thiscall Camera::Inputs(struct GLFWwindow *)" (?Inputs@Camera@@QAEXPAUGLFWwindow@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwGetKey
+Camera.obj : error LNK2019: unresolved external symbol _glfwGetMouseButton referenced in function "public: void __thiscall Camera::Inputs(struct GLFWwindow *)" (?Inputs@Camera@@QAEXPAUGLFWwindow@@@Z)
+imgui_impl_glfw.obj : error LNK2001: unresolved external symbol _glfwGetMouseButton
+Camera.obj : error LNK2019: unresolved external symbol _glfwGetCursorPos referenced in function "public: void __thiscall Camera::Inputs(struct GLFWwindow *)" (?Inputs@Camera@@QAEXPAUGLFWwindow@@@Z)
+imgui_impl_glfw.obj : error LNK2001: unresolved external symbol _glfwGetCursorPos
+Camera.obj : error LNK2019: unresolved external symbol _glfwSetCursorPos referenced in function "public: void __thiscall Camera::Inputs(struct GLFWwindow *)" (?Inputs@Camera@@QAEXPAUGLFWwindow@@@Z)
+imgui_impl_glfw.obj : error LNK2001: unresolved external symbol _glfwSetCursorPos
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetErrorCallback referenced in function "bool __cdecl ImGui_ImplGlfw_Init(struct GLFWwindow *,bool,enum GlfwClientApi)" (?ImGui_ImplGlfw_Init@@YA_NPAUGLFWwindow@@_NW4GlfwClientApi@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetMonitors referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMonitors(void)" (?ImGui_ImplGlfw_UpdateMonitors@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetMonitorPos referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMonitors(void)" (?ImGui_ImplGlfw_UpdateMonitors@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetMonitorWorkarea referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMonitors(void)" (?ImGui_ImplGlfw_UpdateMonitors@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetMonitorContentScale referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMonitors(void)" (?ImGui_ImplGlfw_UpdateMonitors@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetMonitorCallback referenced in function "bool __cdecl ImGui_ImplGlfw_Init(struct GLFWwindow *,bool,enum GlfwClientApi)" (?ImGui_ImplGlfw_Init@@YA_NPAUGLFWwindow@@_NW4GlfwClientApi@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetVideoMode referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMonitors(void)" (?ImGui_ImplGlfw_UpdateMonitors@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwWindowHint referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwWindowHint
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwCreateWindow referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwCreateWindow
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwDestroyWindow referenced in function "void __cdecl ImGui_ImplGlfw_DestroyWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_DestroyWindow@@YAXPAUImGuiViewport@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwDestroyWindow
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowTitle referenced in function "void __cdecl ImGui_ImplGlfw_SetWindowTitle(struct ImGuiViewport *,char const *)" (?ImGui_ImplGlfw_SetWindowTitle@@YAXPAUImGuiViewport@@PBD@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetWindowPos referenced in function "struct ImVec2 __cdecl ImGui_ImplGlfw_GetWindowPos(struct ImGuiViewport *)" (?ImGui_ImplGlfw_GetWindowPos@@YA?AUImVec2@@PAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowPos referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetWindowSize referenced in function "struct ImVec2 __cdecl ImGui_ImplGlfw_GetWindowSize(struct ImGuiViewport *)" (?ImGui_ImplGlfw_GetWindowSize@@YA?AUImVec2@@PAUImGuiViewport@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwGetWindowSize
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowSize referenced in function "void __cdecl ImGui_ImplGlfw_SetWindowSize(struct ImGuiViewport *,struct ImVec2)" (?ImGui_ImplGlfw_SetWindowSize@@YAXPAUImGuiViewport@@UImVec2@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetFramebufferSize referenced in function "void __cdecl ImGui_ImplGlfw_NewFrame(void)" (?ImGui_ImplGlfw_NewFrame@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowOpacity referenced in function "void __cdecl ImGui_ImplGlfw_SetWindowAlpha(struct ImGuiViewport *,float)" (?ImGui_ImplGlfw_SetWindowAlpha@@YAXPAUImGuiViewport@@M@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwShowWindow referenced in function "void __cdecl ImGui_ImplGlfw_ShowWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_ShowWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwFocusWindow referenced in function "void __cdecl ImGui_ImplGlfw_SetWindowFocus(struct ImGuiViewport *)" (?ImGui_ImplGlfw_SetWindowFocus@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetWindowAttrib referenced in function "bool __cdecl ImGui_ImplGlfw_GetWindowFocus(struct ImGuiViewport *)" (?ImGui_ImplGlfw_GetWindowFocus@@YA_NPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowPosCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowSizeCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetWindowCloseCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetInputMode referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMouseCursor(void)" (?ImGui_ImplGlfw_UpdateMouseCursor@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwCreateStandardCursor referenced in function "bool __cdecl ImGui_ImplGlfw_Init(struct GLFWwindow *,bool,enum GlfwClientApi)" (?ImGui_ImplGlfw_Init@@YA_NPAUGLFWwindow@@_NW4GlfwClientApi@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwDestroyCursor referenced in function "void __cdecl ImGui_ImplGlfw_Shutdown(void)" (?ImGui_ImplGlfw_Shutdown@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetCursor referenced in function "void __cdecl ImGui_ImplGlfw_UpdateMouseCursor(void)" (?ImGui_ImplGlfw_UpdateMouseCursor@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetKeyCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetCharCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetMouseButtonCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetScrollCallback referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetJoystickAxes referenced in function "void __cdecl ImGui_ImplGlfw_UpdateGamepads(void)" (?ImGui_ImplGlfw_UpdateGamepads@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetJoystickButtons referenced in function "void __cdecl ImGui_ImplGlfw_UpdateGamepads(void)" (?ImGui_ImplGlfw_UpdateGamepads@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSetClipboardString referenced in function "void __cdecl ImGui_ImplGlfw_SetClipboardText(void *,char const *)" (?ImGui_ImplGlfw_SetClipboardText@@YAXPAXPBD@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetClipboardString referenced in function "char const * __cdecl ImGui_ImplGlfw_GetClipboardText(void *)" (?ImGui_ImplGlfw_GetClipboardText@@YAPBDPAX@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetTime referenced in function "void __cdecl ImGui_ImplGlfw_NewFrame(void)" (?ImGui_ImplGlfw_NewFrame@@YAXXZ)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwMakeContextCurrent referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwMakeContextCurrent
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSwapBuffers referenced in function "void __cdecl ImGui_ImplGlfw_SwapBuffers(struct ImGuiViewport *,void *)" (?ImGui_ImplGlfw_SwapBuffers@@YAXPAUImGuiViewport@@PAX@Z)
+Main.obj : error LNK2001: unresolved external symbol _glfwSwapBuffers
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwSwapInterval referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwGetWin32Window referenced in function "void __cdecl ImGui_ImplGlfw_CreateWindow(struct ImGuiViewport *)" (?ImGui_ImplGlfw_CreateWindow@@YAXPAUImGuiViewport@@@Z)
+imgui_impl_glfw.obj : error LNK2019: unresolved external symbol _glfwCreateWindowSurface referenced in function "int __cdecl ImGui_ImplGlfw_CreateVkSurface(struct ImGuiViewport *,unsigned __int64,void const *,unsigned __int64 *)" (?ImGui_ImplGlfw_CreateVkSurface@@YAHPAUImGuiViewport@@_KPBXPA_K@Z)
+Main.obj : error LNK2019: unresolved external symbol _glfwInit referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwTerminate referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwWindowShouldClose referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwSetWindowShouldClose referenced in function "void __cdecl processInput(struct GLFWwindow *)" (?processInput@@YAXPAUGLFWwindow@@@Z)
+Main.obj : error LNK2019: unresolved external symbol _glfwSetFramebufferSizeCallback referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwPollEvents referenced in function _main
+C:\Users\Ehsan\Favorites\Desktop\MISC\C++ Libraries\lib\glfw3.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+C:\Users\Ehsan\Documents\GitHub\Verve\Project1\Debug\Project1.exe : fatal error LNK1120: 52 unresolved externals
