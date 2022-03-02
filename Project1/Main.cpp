@@ -47,7 +47,6 @@ GLuint indices[] =
 */
 
 
-
 //width and height of the escreen
 const GLuint SCR_WIDTH = 1600;
 const GLuint SCR_HEIGHT = 900;
@@ -193,7 +192,7 @@ int main()
 
 
 	// Create a GLFWwindow object of 800 by 800 pixels, naming it "YoutubeOpenGL"
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Verve (x64) - Lighting test", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Verve (x64) - Transformation test", NULL, NULL);
 
 	// Error check if the window fails to create
 	if (window == NULL)
@@ -300,7 +299,7 @@ int main()
 
 	// (optional) set browser properties
 	fileDialog.SetTitle("title");
-	fileDialog.SetTypeFilters({ ".gltf" });
+	fileDialog.SetTypeFilters({ ".gltf", ".*" });
 
 
 	// Imgui variables and uniforms for shaders
@@ -308,13 +307,26 @@ int main()
 	bool	modelOutline = false;
 	float	color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	float	size = 0.05f;
+	bool	normalLoaded = false;
+	std::string normalPath;
+	Texture* normalMap;
+
+	//position
 	float	px = 0.0f;
 	float	py = 0.0f;
 	float	pz = 0.0f;
-
+	
+	// rotation
 	float	rx = 0.0f;
 	float	ry = 0.0f;
 	float	rz = 0.0f;
+		    
+
+	//light
+	float	amb  = 0.5f;
+	float	spec = 0.5f;
+	float	outerCone = 0.90f;
+
 
 	bool	textureBool = false;
 	int		textureOn = 1;
@@ -332,6 +344,23 @@ int main()
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "py"), py);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "pz"), pz);
+
+	// sending the normal texture to the fragment shader
+	if (normalLoaded)
+	{
+		normalMap = new Texture((normalPath).c_str(), "normal", 1);
+		normalMap->Bind();
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 1);
+	}
+
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rx"), rx);
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "ry"), ry);
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rz"), rz);
+
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
+
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 
 
@@ -364,7 +393,6 @@ int main()
 	static const char* current_item = "Point";
 	int lightType = 0;
 
-	bool hasModel = false;
 
 	// MODEL LOADING
 	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
@@ -430,6 +458,7 @@ int main()
 			// Draw the normal model
 			model->Draw(shaderProgram, camera);
 
+			
 
 			// Make it so only the pixels without the value 1 pass the test
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -458,6 +487,16 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "py"), py);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "pz"), pz);
+
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rx"), rx);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "ry"), ry);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rz"), rz);
+
+
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
+
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
 
@@ -486,6 +525,11 @@ int main()
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "px"), px);
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "py"), py);
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "pz"), pz);
+
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "rx"), rx);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "ry"), ry);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "rz"), rz);
+
 			model->Draw(outliningProgram, camera);
 		}
 
@@ -552,6 +596,7 @@ int main()
 		// all active windows docked into it will lose their parent and become undocked.
 		// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
 		// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+
 		if (!opt_padding)
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("DockSpace Demo", &dockingSpaceOpen, window_flags);
@@ -591,6 +636,16 @@ int main()
 			textureBool = false;
 			drawCube = false;
 
+			size = 0.05f;
+
+			px = 0.0f;
+			py = 0.0f;
+			pz = 0.0f;
+
+			rx = 0.0f;
+			ry = 0.0f;
+			rz = 0.0f;
+
 			// load new model path
 			modelPath = fileDialog.GetSelected().string();
 			std::cout << "Model path before edit: " << modelPath << std::endl;
@@ -613,69 +668,127 @@ int main()
 		if (drawCube)
 		{
 			//ImGui::SameLine();														// draw the next component on the same line and previous
-			ImGui::Checkbox("Texture", &textureBool);									// enable texture
-			ImGui::SameLine();															// draw the next component on the same line and previous
+			ImGui::Checkbox("Texture", &textureBool);									// enable texture														// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
 			ImGui::Checkbox("Model outline", &modelOutline);							// chnga model colour
 			ImGui::ColorEdit4("Color", color);											// change colour
+
+
 			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
-			ImGui::PushItemWidth(70);
-			ImGui::DragFloat("Size", &size, 0.01f, 0.0f);								// change size
-			
-			ImGui::DragFloat("X", &px, 0.05f, 0.1f);									// change position X
-			ImGui::SameLine();
-			ImGui::DragFloat("Y", &py, 0.05f, 0.1f);									// change position Y
-			ImGui::SameLine();
-			ImGui::DragFloat("Z", &pz, 0.05f, 0.1f);									// change position Z
 
 
-			ImGui::DragFloat("RX", &rx, 0.05f, 0.1f);									// change position X
-			ImGui::SameLine();
-			ImGui::DragFloat("RY", &ry, 0.05f, 0.1f);									// change position Y
-			ImGui::SameLine();
-			ImGui::DragFloat("RZ", &rz, 0.05f, 0.1f);									// change position Z
-
-
-
-			
-			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-			ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
-			ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
-			ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
-
-
-			// Types of light combo box
-			ImGuiComboFlags flags = ImGuiComboFlags_NoArrowButton;
-
-			if (ImGui::BeginCombo("Light Type", current_item, ImGuiComboFlags_NoArrowButton))
+			if (ImGui::Button("Load Normal Texture"))
 			{
-				for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-				{
-					bool is_selected = (current_item == items[n]);
-					if (ImGui::Selectable(items[n], is_selected))
-						current_item = items[n];
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
+				fileDialog.Open();
 			}
 
-			if (current_item == "Directional")
+			fileDialog.Display();
+			if (fileDialog.HasSelected())
 			{
-				lightType = 1;
-			}
-			else if (current_item == "Spot")
-			{
-				lightType = 2;
-			}
-			else
-			{
-				lightType = 0;
+				std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
+
+				// unload current model
+				normalLoaded = false;
+				drawCube = false;
+
+				// load new model path
+				normalPath = fileDialog.GetSelected().string();
+				std::cout << "Model path before edit: " << normalPath << std::endl;
+				std::replace(normalPath.begin(), normalPath.end(), '\\', '/');
+				std::cout << "Model path after edit: " << normalPath << std::endl;
+				normalMap = new Texture((normalPath).c_str(), "normal", 1);
+				normalLoaded = true;
+				drawCube = true;
+
+				fileDialog.ClearSelected();
 			}
 
-			ImGui::Button("Click me");
-			
 		}
+
+		ImGui::Begin("Transformation");													// imgui begin and title
+		if (drawCube)
+		{
+			ImGui::PushItemWidth(70);
+
+			ImGui::Text("Scale");
+
+			ImGui::DragFloat("Size", &size, 0.01f, 0.0f);								// change size
+
+			ImGui::Text("Position");
+
+			ImGui::DragFloat("X ", &px, 0.05f, 0.1f);									// change position X
+			ImGui::SameLine();
+			ImGui::DragFloat("Y ", &py, 0.05f, 0.1f);									// change position Y
+			ImGui::SameLine();
+			ImGui::DragFloat("Z ", &pz, 0.05f, 0.1f);									// change position Z
+
+			ImGui::Text("Rotation");
+			ImGui::DragFloat("RX", &rx, 0.1f, 0.1f);									// change position X
+			ImGui::SameLine();
+			ImGui::DragFloat("RY", &ry, 0.1f, 0.1f);									// change position Y
+			ImGui::SameLine();
+			ImGui::DragFloat("RZ", &rz, 0.1f, 0.1f);									// change position Z
+
+			if (ImGui::Button("Default"))
+			{
+				size = 0.05f;
+
+				px = 0.0f;
+				py = 0.0f;
+				pz = 0.0f;
+
+				rx = 0.0f;
+				ry = 0.0f;
+				rz = 0.0f;
+			}
+		}
+
+		//LIGHT
+		ImGui::Begin("Light");															// imgui begin and title
+		
+		// Types of light combo box
+		ImGuiComboFlags flags = ImGuiComboFlags_NoArrowButton;
+
+		if (ImGui::BeginCombo("Light Type", current_item, ImGuiComboFlags_NoArrowButton))
+		{
+			for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+			{
+				bool is_selected = (current_item == items[n]);
+				if (ImGui::Selectable(items[n], is_selected))
+					current_item = items[n];
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		if (current_item == "Directional")
+		{
+			lightType = 1;
+		}
+		else if (current_item == "Spot")
+		{
+			lightType = 2;
+		}
+		else
+		{
+			lightType = 0;
+		}
+
+		ImGui::DragFloat("Ambient", &amb, 0.1f, 0.1f);									// change ambient
+		ImGui::DragFloat("Specular light", &spec, 0.1f, 0.1f);							// change specular light
+
+		if (current_item == "Spot")
+		{
+			ImGui::DragFloat("Cone area", &outerCone, 0.1f, 0.1f);							// change specular light
+		}
+
+		//CAMERA
+		ImGui::Begin("Camera");													// imgui begin and title
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.60f);
+		ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
+		ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
+		ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
 
 		static bool show = true;
 		ImGui::ShowDemoWindow(&show);
@@ -697,9 +810,15 @@ int main()
 
 		ImGui::End();
 
-		ImGui::End();
+		ImGui::End(); //attributes
 
-		ImGui::End();
+		ImGui::End(); //scene viewport
+
+		ImGui::End(); //transformation
+
+		ImGui::End(); //light
+
+		ImGui::End(); //camera
 
 
 		//ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);

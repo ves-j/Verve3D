@@ -36,11 +36,36 @@ uniform float px;
 uniform float py;
 uniform float pz;
 
+uniform float rx;
+uniform float ry;
+uniform float rz;
+
+mat4 rotationX( in float angle ) {
+	return mat4(	1.0,		0,			0,			0,
+			 		0, 	cos(angle),	-sin(angle),		0,
+					0, 	sin(angle),	 cos(angle),		0,
+					0, 			0,			  0, 		1);
+}
+
+mat4 rotationY( in float angle ) {
+	return mat4(	cos(angle),		0,		sin(angle),	0,
+			 				0,		1.0,			 0,	0,
+					-sin(angle),	0,		cos(angle),	0,
+							0, 		0,				0,	1);
+}
+
+mat4 rotationZ( in float angle ) {
+	return mat4(	cos(angle),		-sin(angle),	0,	0,
+			 		sin(angle),		cos(angle),		0,	0,
+							0,				0,		1,	0,
+							0,				0,		0,	1);
+}
+
 
 void main()
 {
 	// calculates current position
-	crntPos = vec3(model * translation * -rotation * scale * vec4(size * (aPos.x + py), size * (aPos.y + px), size * (aPos.z + pz), 1.0f));
+	crntPos = vec3(model * translation * -rotationX(rx) * rotationY(ry) * rotationZ(rz) * scale * vec4(size * (aPos.x + py), size * (aPos.y + px), size * (aPos.z + pz), 1.0f));
 	// Assigns the normal from the Vertex Data to "Normal"
 	Normal = aNormal;
 	// Assigns the colors from the Vertex Data to "color"

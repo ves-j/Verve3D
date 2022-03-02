@@ -32,7 +32,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 	// glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
 	// Check what type of color channels the texture has and load it accordingly
-	if (type == "norm") // prevents SRGB from deforming normals
+	if (type == "normal") // prevents SRGB from deforming normals
 		glTexImage2D
 		(
 			GL_TEXTURE_2D,
@@ -50,7 +50,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		(
 			GL_TEXTURE_2D,
 			0,
-			GL_RGBA,
+			GL_SRGB_ALPHA,
 			widthImg,
 			heightImg,
 			0,
@@ -63,7 +63,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		(
 			GL_TEXTURE_2D,
 			0,
-			GL_RGBA,
+			GL_SRGB,
 			widthImg,
 			heightImg,
 			0,
@@ -76,7 +76,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		(
 			GL_TEXTURE_2D,
 			0,
-			GL_RGBA,
+			GL_SRGB,
 			widthImg,
 			heightImg,
 			0,

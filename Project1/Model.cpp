@@ -76,7 +76,7 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 			transValues[i] = (node["translation"][i]);
 		translation = glm::make_vec3(transValues);
 	}*/
-
+	
 
 	// Get quaternion if it exists
 	glm::quat rotation = glm::quat(0.0f, 0.0f, 0.0f, 0.0f);
@@ -293,13 +293,13 @@ std::vector<Texture> Model::getTextures()
 				loadedTexName.push_back(texPath);
 			}
 			// Load normal maps
-			else if (texPath.find("normal") != std::string::npos)
+			/*else if (texPath.find("normal") != std::string::npos)
 			{
-				Texture normal = Texture((fileDirectory + texPath).c_str(), "norm", loadedTex.size());
-				textures.push_back(normal);
-				loadedTex.push_back(normal);
+				Texture normalMap = Texture((fileDirectory + texPath).c_str(), "normal", 1);
+				textures.push_back(normalMap);
+				loadedTex.push_back(normalMap);
 				loadedTexName.push_back(texPath);
-			}
+			}*/
 		}
 	}
 

@@ -32,6 +32,12 @@ uniform vec4 meshCol;
 uniform int lightType;
 
 
+//light controller
+uniform float amb;			//ambient
+uniform float specLight;	//specular
+uniform float outerConeM;	//specular
+
+
 vec4 pointLight()
 {	
 	// used in two variables so I calculate it here to not have to do it twice
@@ -44,7 +50,7 @@ vec4 pointLight()
 	float inten = 1.0f / (a * dist * dist + b * dist + 1.0f);
 
 	// ambient lighting
-	float ambient = 0.70f;
+	float ambient = amb;
 
 	// diffuse lighting
 	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
@@ -55,7 +61,7 @@ vec4 pointLight()
 	float specular = 0.0f;
 	if (diffuse != 0.0f)
 	{
-		float specularLight = 0.50f;
+		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
@@ -68,7 +74,7 @@ vec4 pointLight()
 vec4 direcLight()
 {
 	// ambient lighting
-	float ambient = 0.60f;
+	float ambient = amb;
 
 	// diffuse lighting
 	vec3 normal = normalize(Normal);
@@ -77,9 +83,10 @@ vec4 direcLight()
 
 	// specular lighting
 	float specular = 0.0f;
+
 	if (diffuse != 0.0f)
 	{
-		float specularLight = 0.50f;
+		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
@@ -92,11 +99,11 @@ vec4 direcLight()
 vec4 spotLight()
 {
 	// controls how big the area that is lit up is
-	float outerCone = 0.90f;
-	float innerCone = 0.95f;
+	float outerCone = outerConeM;
+	float innerCone = outerConeM + 0.05f;
 
 	// ambient lighting
-	float ambient = 0.60f;
+	float ambient = amb;
 
 	// diffuse lighting
 	vec3 normal = normalize(Normal);
@@ -107,7 +114,7 @@ vec4 spotLight()
 	float specular = 0.0f;
 	if (diffuse != 0.0f)
 	{
-		float specularLight = 0.50f;
+		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
