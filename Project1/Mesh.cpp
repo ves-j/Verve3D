@@ -61,7 +61,7 @@ void Mesh::Draw
 	// Keep track of how many of each type of textures we have
 	unsigned int numDiffuse = 0;
 	unsigned int numSpecular = 0;
-	unsigned int numNormal = 0;
+	//unsigned int numNormal = 0;
 
 	for (unsigned int i = 0; i < textures.size(); i++)
 	{

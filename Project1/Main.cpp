@@ -325,6 +325,7 @@ int main()
 	//light
 	float	amb  = 0.5f;
 	float	spec = 0.5f;
+	int		specAmount = 16;
 	float	outerCone = 0.90f;
 
 
@@ -336,6 +337,7 @@ int main()
 	float	field_of_view = 45.0f;
 	float	near_plane = 0.1f;
 	float	far_plane = 100.0f;
+	bool	faceCull = false;
 
 
 	// sending data to uniforms in shaders
@@ -360,6 +362,7 @@ int main()
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
+	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
 
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 
@@ -406,10 +409,6 @@ int main()
 	// Enable depth testing since it's disabled when drawing the framebuffer rectangle
 	glEnable(GL_DEPTH_TEST);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-	glFrontFace(GL_CW);
-
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -429,7 +428,6 @@ int main()
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		
 
 
 		// Camera input handleing
@@ -443,27 +441,41 @@ int main()
 
 		// Activate light shader program inside the main loop and draw the light source
 		lightMesh.DrawLight(lightShader, camera);
+
+		if (faceCull)
+		{
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_FRONT);
+			glFrontFace(GL_CW);
+		}
+		else
+		{
+			glDisable(GL_CULL_FACE);
+		}
+
+		
 		
 		// if drawCube is true draw the cube
 		if (drawCube)
 		{
 			// Draw primitives, number of indices, datatype of indices, index of indices
 			//floor.Draw(shaderProgram, camera);
+
 			// Make it so the stencil test always passes
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
 			// Enable modifying of the stencil buffer
 			glStencilMask(0xFF);
-
 
 			// Draw the normal model
 			model->Draw(shaderProgram, camera);
 
-			
-
 			// Make it so only the pixels without the value 1 pass the test
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+
 			// Disable modifying of the stencil buffer
 			glStencilMask(0x00);
+
 			// Disable the depth buffer (can see the model through anything)
 			//glDisable(GL_DEPTH_TEST);
 	
@@ -496,6 +508,8 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
+
 
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
@@ -634,6 +648,7 @@ int main()
 
 			// unload current model
 			textureBool = false;
+			normalLoaded = false;
 			drawCube = false;
 
 			size = 0.05f;
@@ -693,10 +708,12 @@ int main()
 
 				// load new model path
 				normalPath = fileDialog.GetSelected().string();
-				std::cout << "Model path before edit: " << normalPath << std::endl;
+				std::cout << "\nNormal map path before edit: " << normalPath << std::endl;
 				std::replace(normalPath.begin(), normalPath.end(), '\\', '/');
-				std::cout << "Model path after edit: " << normalPath << std::endl;
+				std::cout << "Normal map path after edit: " << normalPath << std::endl;
 				normalMap = new Texture((normalPath).c_str(), "normal", 1);
+				normalMap->Bind();
+				glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 1);
 				normalLoaded = true;
 				drawCube = true;
 
@@ -711,11 +728,9 @@ int main()
 			ImGui::PushItemWidth(70);
 
 			ImGui::Text("Scale");
-
 			ImGui::DragFloat("Size", &size, 0.01f, 0.0f);								// change size
 
 			ImGui::Text("Position");
-
 			ImGui::DragFloat("X ", &px, 0.05f, 0.1f);									// change position X
 			ImGui::SameLine();
 			ImGui::DragFloat("Y ", &py, 0.05f, 0.1f);									// change position Y
@@ -723,11 +738,11 @@ int main()
 			ImGui::DragFloat("Z ", &pz, 0.05f, 0.1f);									// change position Z
 
 			ImGui::Text("Rotation");
-			ImGui::DragFloat("RX", &rx, 0.1f, 0.1f);									// change position X
+			ImGui::DragFloat("RX", &rx, 0.05f, 0.1f);									// change position X
 			ImGui::SameLine();
-			ImGui::DragFloat("RY", &ry, 0.1f, 0.1f);									// change position Y
+			ImGui::DragFloat("RY", &ry, 0.05f, 0.1f);									// change position Y
 			ImGui::SameLine();
-			ImGui::DragFloat("RZ", &rz, 0.1f, 0.1f);									// change position Z
+			ImGui::DragFloat("RZ", &rz, 0.05f, 0.1f);									// change position Z
 
 			if (ImGui::Button("Default"))
 			{
@@ -777,6 +792,7 @@ int main()
 
 		ImGui::DragFloat("Ambient", &amb, 0.1f, 0.1f);									// change ambient
 		ImGui::DragFloat("Specular light", &spec, 0.1f, 0.1f);							// change specular light
+		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 64);						// change specular light
 
 		if (current_item == "Spot")
 		{
@@ -789,6 +805,7 @@ int main()
 		ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
 		ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
 		ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
+		ImGui::Checkbox("Face Culling", &faceCull);
 
 		static bool show = true;
 		ImGui::ShowDemoWindow(&show);

@@ -18,6 +18,7 @@ in vec2 texCoord;
 uniform sampler2D diffuse0;
 uniform sampler2D specular0;
 uniform sampler2D normal0;
+
 // Gets the color of the light from the main function
 uniform vec4 lightColor;
 // Gets the position of the light from the main function
@@ -36,7 +37,7 @@ uniform int lightType;
 uniform float amb;			//ambient
 uniform float specLight;	//specular
 uniform float outerConeM;	//specular
-
+uniform int	  spPower;
 
 vec4 pointLight()
 {	
@@ -64,7 +65,7 @@ vec4 pointLight()
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
-		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
+		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
 		specular = specAmount * specularLight;
 	};
 
@@ -77,7 +78,7 @@ vec4 direcLight()
 	float ambient = amb;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);
+	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
 	vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
@@ -89,7 +90,7 @@ vec4 direcLight()
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
-		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
+		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
 		specular = specAmount * specularLight;
 	};
 
@@ -106,7 +107,7 @@ vec4 spotLight()
 	float ambient = amb;
 
 	// diffuse lighting
-	vec3 normal = normalize(Normal);
+	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
 	vec3 lightDirection = normalize(lightPos - crntPos);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
@@ -117,7 +118,7 @@ vec4 spotLight()
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
-		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), 16);
+		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
 		specular = specAmount * specularLight;
 	};
 
