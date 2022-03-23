@@ -51,6 +51,7 @@ GLuint indices[] =
 const GLuint SCR_WIDTH = 1600;
 const GLuint SCR_HEIGHT = 900;
 
+
 // Vertices coordinates      -z is back and +z is front
 Vertex vertices[] =
 { //     COORDINATES							NORMALS							COLORS						TEXTURE UV	
@@ -144,12 +145,12 @@ Vertex lightVertices[] =
 { //     COORDINATES     //
 	Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
-	Vertex{glm::vec3( 0.1f, -0.1f, -0.1f)},
-	Vertex{glm::vec3( 0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f,  0.1f,  0.1f)},
 	Vertex{glm::vec3(-0.1f,  0.1f, -0.1f)},
-	Vertex{glm::vec3( 0.1f,  0.1f, -0.1f)},
-	Vertex{glm::vec3( 0.1f,  0.1f,  0.1f)}
+	Vertex{glm::vec3(0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f,  0.1f,  0.1f)}
 };
 
 GLuint lightIndices[] =
@@ -240,9 +241,14 @@ int main()
 
 
 	// Light color
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);	// this is mesh colour
+	//glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);	// this is mesh colour
+	float	  lightColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	// light and cube position
-	glm::vec3 lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
+
+	float lx = 0.0f;
+	float ly = 0.0f;
+	float lz = 0.0f;
+	glm::vec3 lightPos = glm::vec3(lx, ly, lz);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -256,20 +262,20 @@ int main()
 
 
 
-	// Activating light shader program and cube shader program
+	// Activating light shader program and model shader program
 	lightShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
 
 	shaderProgram.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
-	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
 
 	basePlaneShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(basePlaneShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(baseModel));
-	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	
+	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+
 
 	// TEXTURES STUFF (WIDTH, HEIGHT, COLOUR CHANNEL)
 	int widthImg, heightImg, numColCh;
@@ -308,8 +314,9 @@ int main()
 	float	color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	float	size = 0.05f;
 	bool	normalLoaded = false;
-	std::string normalPath;
+	std::string normalPath = "";
 	Texture* normalMap;
+	normalMap = new Texture((normalPath).c_str(), "normal", 1);
 
 	//position
 	float	px = 0.0f;
@@ -323,17 +330,20 @@ int main()
 		    
 
 	//light
+	bool	blinn = true;
+	int		blinnOn = 1;
 	float	amb  = 0.5f;
 	float	spec = 0.5f;
 	int		specAmount = 16;
 	float	outerCone = 0.90f;
 
-
+	int		normalLoadedUniform = 0;	// checking if normal texture is loaded and sending in shader
 	bool	textureBool = false;
 	int		textureOn = 1;
 	bool	wireframeMode = false;
 
 	// camera variables
+	float	backColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };	// this is mesh colour
 	float	field_of_view = 45.0f;
 	float	near_plane = 0.1f;
 	float	far_plane = 100.0f;
@@ -346,6 +356,7 @@ int main()
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "py"), py);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "pz"), pz);
+	
 
 	// sending the normal texture to the fragment shader
 	if (normalLoaded)
@@ -359,13 +370,23 @@ int main()
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "ry"), ry);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rz"), rz);
 
+	glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+	glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lx"), lx);
+	glUniform1f(glad_glGetUniformLocation(lightShader.ID, "ly"), ly);
+	glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
+	glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
+
+
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
+	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
 
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
-
+	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
 
 	// Create Frame Buffer Object
 	unsigned int FBO;
@@ -406,8 +427,6 @@ int main()
 	Model* model;
 	model = new Model((modelPath).c_str());
 
-	// Enable depth testing since it's disabled when drawing the framebuffer rectangle
-	glEnable(GL_DEPTH_TEST);
 
 
 	// Main while loop
@@ -425,9 +444,11 @@ int main()
 		// Bind the custom framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		// Specify the color of the background
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(backColor[0], backColor[1], backColor[2], backColor[3]);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+		glEnable(GL_DEPTH_TEST);
 
 
 		// Camera input handleing
@@ -441,6 +462,25 @@ int main()
 
 		// Activate light shader program inside the main loop and draw the light source
 		lightMesh.DrawLight(lightShader, camera);
+
+		// sending light data to light shader for before model loading
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lx"), lx);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "ly"), ly);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
+		glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+
+		if (blinn)
+		{
+			blinnOn = 1;
+		}
+		else
+		{
+			blinnOn = 0;
+		}
 
 		if (faceCull)
 		{
@@ -491,9 +531,39 @@ int main()
 			textureOn = 0;
 		}
 		
-		
+		if (normalLoaded)
+		{
+			normalLoadedUniform = 1;
+		}
+		else
+		{
+			normalLoadedUniform = 0;
+		}
 
 		// sending data to uniforms in shaders
+
+		// light colour
+		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lx"), lx);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "ly"), ly);
+		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
+		glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+
+
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
+
+
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
+
+
 		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "meshCol"), color[0], color[1], color[2], color[3]);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "size"), size);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "px"), px);
@@ -504,22 +574,7 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "ry"), ry);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rz"), rz);
 
-
-		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
-		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
-		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
-		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
-
-
-		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
-		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "lightType"), lightType);
-
-
-
-		// light colour
-		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-		glUniform4f(glad_glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-		glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+		
 
 		// wireframe mode on/off
 		if (!wireframeMode)
@@ -646,10 +701,13 @@ int main()
 		{
 			std::cout << "Selected filename: " << fileDialog.GetSelected().string() << std::endl;
 
-			// unload current model
+			// unload current model and normal map
 			textureBool = false;
-			normalLoaded = false;
 			drawCube = false;
+			normalPath = "";
+			normalMap->Unbind();
+			glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 0);
+			normalLoaded = false;
 
 			size = 0.05f;
 
@@ -697,6 +755,7 @@ int main()
 				fileDialog.Open();
 			}
 
+
 			fileDialog.Display();
 			if (fileDialog.HasSelected())
 			{
@@ -718,6 +777,19 @@ int main()
 				drawCube = true;
 
 				fileDialog.ClearSelected();
+			}
+
+			if (!normalPath.empty())
+			{
+				if (ImGui::Button("Delete Normal Texture"))
+				{
+					drawCube = false;
+					normalPath = "";
+					normalMap->Unbind();
+					glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 0);
+					normalLoaded = false;
+					drawCube = true;
+				}
 			}
 
 		}
@@ -743,6 +815,7 @@ int main()
 			ImGui::DragFloat("RY", &ry, 0.05f, 0.1f);									// change position Y
 			ImGui::SameLine();
 			ImGui::DragFloat("RZ", &rz, 0.05f, 0.1f);									// change position Z
+	
 
 			if (ImGui::Button("Default"))
 			{
@@ -760,7 +833,22 @@ int main()
 
 		//LIGHT
 		ImGui::Begin("Light");															// imgui begin and title
-		
+
+		ImGui::Checkbox("Blinn", &blinn);
+
+		ImGui::ColorEdit4("Light Color", lightColor);									// change colour
+
+		ImGui::PushItemWidth(70);
+
+		ImGui::Text("Position");
+		ImGui::DragFloat("LX ", &lx, 0.05f, 0.1f);										// change position X
+		ImGui::SameLine();
+		ImGui::DragFloat("LY ", &ly, 0.05f, 0.1f);										// change position Y
+		ImGui::SameLine();
+		ImGui::DragFloat("LZ ", &lz, 0.05f, 0.1f);										// change position Z
+
+
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.60f);
 		// Types of light combo box
 		ImGuiComboFlags flags = ImGuiComboFlags_NoArrowButton;
 
@@ -792,16 +880,31 @@ int main()
 
 		ImGui::DragFloat("Ambient", &amb, 0.1f, 0.1f);									// change ambient
 		ImGui::DragFloat("Specular light", &spec, 0.1f, 0.1f);							// change specular light
-		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 64);						// change specular light
+		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 512);						// change specular light
 
 		if (current_item == "Spot")
 		{
-			ImGui::DragFloat("Cone area", &outerCone, 0.1f, 0.1f);							// change specular light
+			ImGui::DragFloat("Cone area", &outerCone, 0.1f, 0.1f);							// change cone area
+		}
+
+		if (ImGui::Button("Reset light values"))
+		{
+			lx = 1.0f;
+			ly = 1.0f;
+			lz = 1.0f;
+			amb = 0.5f;
+			spec = 0.5f;
+			specAmount = 16;
+			outerCone = 0.90f;
+
+			//current_item = "Point";
+			//lightType = 0;
 		}
 
 		//CAMERA
 		ImGui::Begin("Camera");													// imgui begin and title
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.60f);
+		ImGui::ColorEdit4("Background Color", backColor);									// change colour
 		ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
 		ImGui::SliderFloat("Near plane", &near_plane, 0.0f, 1000.0f);				// distance where objects appear
 		ImGui::SliderFloat("Far plane", &far_plane, 0.0f, 1000.0f);					// distance where objects disappear
@@ -848,7 +951,7 @@ int main()
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// Enable depth testing since it's disabled when drawing the framebuffer rectangle
-		glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_DEPTH_TEST);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -858,7 +961,7 @@ int main()
 		// Clear stencil buffer
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 		// Enable the depth buffer
-		glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_DEPTH_TEST);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -877,6 +980,7 @@ int main()
 
 	// Delete all the objects we've created
 	delete model;
+	delete normalMap;
 	shaderProgram.Delete();
 	outliningProgram.Delete();
 	basePlaneShader.Delete();

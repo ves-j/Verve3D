@@ -38,6 +38,10 @@ uniform float amb;			//ambient
 uniform float specLight;	//specular
 uniform float outerConeM;	//specular
 uniform int	  spPower;
+uniform int	  blinn;		//blinn phong light
+
+uniform int   normalLoaded;
+
 
 vec4 pointLight()
 {	
@@ -53,19 +57,37 @@ vec4 pointLight()
 	// ambient lighting
 	float ambient = amb;
 
+	vec3 normal;
+
 	// diffuse lighting
-	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
+	if(normalLoaded == 1)
+	{
+		normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
+	}
+	else
+	{
+		normal = normalize(Normal);
+	}
 	vec3 lightDirection = normalize(lightVec);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
 	float specular = 0.0f;
-	if (diffuse != 0.0f)
+
+	if (blinn == 1)	//diffuse != 0.0f
 	{
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
+		specular = specAmount * specularLight;
+	}
+	else
+	{
+		float specularLight = specLight;
+		vec3 viewDirection = normalize(camPos - crntPos);
+		vec3 reflectionDirection = reflect(-lightDirection, normal);
+		float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), spPower);
 		specular = specAmount * specularLight;
 	};
 
@@ -74,29 +96,50 @@ vec4 pointLight()
 
 vec4 direcLight()
 {
+
+	// used in two variables so I calculate it here to not have to do it twice
+	vec3 lightVec = lightPos - crntPos;
 	// ambient lighting
 	float ambient = amb;
 
+	vec3 normal;
+
 	// diffuse lighting
-	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
-	vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));
+	if(normalLoaded == 1)
+	{
+		normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
+	}
+	else
+	{
+		normal = normalize(Normal);
+	}
+	vec3 lightDirection = normalize(lightVec); //vec3(1.0f, 1.0f, 0.0f)
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
 	float specular = 0.0f;
 
-	if (diffuse != 0.0f)
+	if (blinn == 1)
 	{
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
 		specular = specAmount * specularLight;
+	}
+	else
+	{
+		float specularLight = specLight;
+		vec3 viewDirection = normalize(camPos - crntPos);
+		vec3 reflectionDirection = reflect(-lightDirection, normal);
+		float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), spPower);
+		specular = specAmount * specularLight;
 	};
 
 	return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
 }
 
+// don't add normal texture to spot light or cone will break
 vec4 spotLight()
 {
 	// controls how big the area that is lit up is
@@ -106,19 +149,36 @@ vec4 spotLight()
 	// ambient lighting
 	float ambient = amb;
 
+	vec3 normal;
+
 	// diffuse lighting
-	vec3 normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
+	if(normalLoaded == 1)
+	{
+		normal = normalize(texture(normal0, texCoord).xyz * 2.0f - 1.0f);
+	}
+	else
+	{
+		normal = normalize(Normal);
+	}
 	vec3 lightDirection = normalize(lightPos - crntPos);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
 	// specular lighting
 	float specular = 0.0f;
-	if (diffuse != 0.0f)
+	if (blinn == 1)
 	{
 		float specularLight = specLight;
 		vec3 viewDirection = normalize(camPos - crntPos);
 		vec3 halfwayVec = normalize(viewDirection + lightDirection);
 		float specAmount = pow(max(dot(normal, halfwayVec), 0.0f), spPower);
+		specular = specAmount * specularLight;
+	}
+	else
+	{
+		float specularLight = specLight;
+		vec3 viewDirection = normalize(camPos - crntPos);
+		vec3 reflectionDirection = reflect(-lightDirection, normal);
+		float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), spPower);
 		specular = specAmount * specularLight;
 	};
 

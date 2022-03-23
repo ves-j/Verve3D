@@ -40,6 +40,13 @@ uniform float rx;
 uniform float ry;
 uniform float rz;
 
+mat4 buildTranslation(float x, float y, float z){
+	return mat4(	1.0,		0,			0,			0,
+			 		0, 		  1.0,			0,			0,
+					0, 			0,		  1.0,			0,
+					y, 			x,			z, 			1.0);
+}
+
 mat4 rotationX( in float angle ) {
 	return mat4(	1.0,		0,			0,			0,
 			 		0, 	cos(angle),	-sin(angle),		0,
@@ -62,10 +69,11 @@ mat4 rotationZ( in float angle ) {
 }
 
 
+
 void main()
 {
 	// calculates current position
-	crntPos = vec3(model * translation * -rotationX(rx) * rotationY(ry) * rotationZ(rz) * scale * vec4(size * (aPos.x + py), size * (aPos.y + px), size * (aPos.z + pz), 1.0f));
+	crntPos = vec3(model * buildTranslation(px, py, pz) * -rotationX(rx) * rotationY(ry) * rotationZ(rz) * scale * vec4(aPos * size, 1.0f));
 	// Assigns the normal from the Vertex Data to "Normal"
 	Normal = aNormal;
 	// Assigns the colors from the Vertex Data to "color"

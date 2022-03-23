@@ -21,6 +21,13 @@ uniform float rx;
 uniform float ry;
 uniform float rz;
 
+mat4 buildTranslation(float x, float y, float z){
+	return mat4(	1.0,		0,			0,			0,
+			 		0, 		  1.0,			0,			0,
+					0, 			0,		  1.0,			0,
+					y, 			x,			z, 			1.0);
+}
+
 mat4 rotationX( in float angle ) {
 	return mat4(	1.0,		0,			0,			0,
 			 		0, 	cos(angle),	-sin(angle),		0,
@@ -44,6 +51,6 @@ mat4 rotationZ( in float angle ) {
 
 void main()
 {
-	vec3 crntPos = vec3(model * translation * -rotationX(rx) * rotationY(ry) * rotationZ(rz) * scale * vec4(size * (aPos.x + py + aNormal.x * outlining), size * (aPos.y + px + aNormal.y * outlining), size * (aPos.z + pz + aNormal.z * outlining), 1.0f));
+	vec3 crntPos = vec3(model * buildTranslation(px, py, pz) * -rotationX(rx) * rotationY(ry) * rotationZ(rz) * scale * vec4(size * (aPos.x + aNormal.x * outlining), size * (aPos.y + aNormal.y * outlining), size * (aPos.z + aNormal.z * outlining), 1.0f));
 	gl_Position = camMatrix * vec4(crntPos, 1.0);
 }
