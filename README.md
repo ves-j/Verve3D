@@ -4,7 +4,7 @@ There are two branches for this project:
 <ul>
   <li>Main</li>
     <ul>
-    <li>Importing GLTF models from JSON file</li>
+    <li>Importing Khronos group's GLTF models from JSON file</li>
     </ul> 
   <li>Assimp</li>
   <ul>
