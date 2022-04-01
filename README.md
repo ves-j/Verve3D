@@ -14,11 +14,19 @@ There are two branches for this project:
 
 <h2>TODO:</h2>
 <ul>
-  <li>Model importer - DONE</li>
-  <li>Post-processing stuff - OnGoing</li>
-  <li>Scene graph</li>
+  <li>IMGUI docking mode implementation ✔️</li>
+  <li>Lighting(point, directional, spot) ✔️</li>
+  <li>Model importer(GLTF) ✔️</li>
+  <li>Normal map ✔️</li>
+  <li>Blinn phong light ✔️</li>
+  <li>Face culling ✔️</li>
+  <li>Full model transformation ✔️</li>
+  <li>GLTF texture optimization ✔️</li>
+  <li>IMGUI optimization ✔️</li>
+  <li>Gamma correction ✔️</li>
+  <li>Post-processing and FBO - OnGoing</li>
+  <li>HDR</li>
   <li>PBR</li>
-  <li>Physics stuff</li>
 </ul> 
 
 <h2>HOW TO BUILD: (Visual Studio verison)</h2>
