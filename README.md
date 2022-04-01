@@ -8,7 +8,7 @@ There are two branches for this project:
     </ul> 
   <li>Assimp</li>
   <ul>
-    <li>Importing modern model formats using Assimp library</li>
+    <li>Importing modern model formats using Assimp library + skeleton animation</li>
     </ul> 
 </ul> 
 
@@ -24,7 +24,7 @@ There are two branches for this project:
   <li>GLTF texture optimization ✔️</li>
   <li>IMGUI optimization ✔️</li>
   <li>Gamma correction ✔️</li>
-  <li>Post-processing and FBO - OnGoing</li>
+  <li>Post-processing and FBO 🚧</li>
   <li>HDR ❌</li>
   <li>PBR ❌</li>
 </ul> 
