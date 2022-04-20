@@ -11,10 +11,12 @@ There are two branches for this project:
     <li>Importing modern model formats using Assimp library + skeleton animation</li>
     </ul> 
 </ul> 
-![Screenshot](https://user-images.githubusercontent.com/69974236/164242374-cc769794-4786-44f2-9fb4-9af34312e540.jpg)
-<img src="https://user-images.githubusercontent.com/69974236/164242374-cc769794-4786-44f2-9fb4-9af34312e540.jpg" title="in-engine sc">
+
+![Screenshot](https://user-images.githubusercontent.com/69974236/164244232-7b90d094-26d1-4083-afe3-fa105b20496d.jpg)
+![helmet_normal map](https://user-images.githubusercontent.com/69974236/164246533-dc60c52b-52f3-467e-8aa4-9f7e719e9fdb.jpg)
 
 <h2>TODO:</h2>
+
 <ul>
   <li>IMGUI docking mode implementation ✔️</li>
   <li>Lighting(point, directional, spot) ✔️</li>
