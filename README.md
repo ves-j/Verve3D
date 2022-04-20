@@ -11,6 +11,7 @@ There are two branches for this project:
     <li>Importing modern model formats using Assimp library + skeleton animation</li>
     </ul> 
 </ul> 
+![Screenshot](https://user-images.githubusercontent.com/69974236/164242374-cc769794-4786-44f2-9fb4-9af34312e540.jpg)
 
 <h2>TODO:</h2>
 <ul>
