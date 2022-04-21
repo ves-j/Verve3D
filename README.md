@@ -29,8 +29,8 @@ There are two branches for this project:
   <li>IMGUI optimization ✔️</li>
   <li>Gamma correction ✔️</li>
   <li>Skybox ✔️</li>
-  <li>Post-processing and FBO 🚧</li>
-  <li>HDR ❌</li>
+  <li>Post-processing and FBO ✔️</li>
+  <li>HDR 🚧</li>
   <li>PBR ❌</li>
 </ul> 
 
