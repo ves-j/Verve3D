@@ -51,6 +51,17 @@ GLuint indices[] =
 const GLuint SCR_WIDTH = 1600;
 const GLuint SCR_HEIGHT = 900;
 
+float rectangleVertices[] =
+{
+	//  Coords   // texCoords
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f,
+
+	 1.0f,  1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f
+};
 
 // Vertices coordinates      -z is back and +z is front
 Vertex vertices[] =
@@ -169,6 +180,44 @@ GLuint lightIndices[] =
 	4, 6, 7
 };
 
+
+// cubemap vert
+float skyboxVertices[] =
+{
+	//   Coordinates
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f
+};
+
+// cubemap ind
+unsigned int skyboxIndices[] =
+{
+	// Right
+	1, 2, 6,
+	6, 5, 1,
+	// Left
+	0, 4, 7,
+	7, 3, 0,
+	// Top
+	4, 5, 6,
+	6, 7, 4,
+	// Bottom
+	0, 3, 2,
+	2, 1, 0,
+	// Back
+	0, 1, 5,
+	5, 4, 0,
+	// Front
+	3, 7, 6,
+	6, 2, 3
+};
+
 // create a file browser instance
 ImGui::FileBrowser fileDialog;
 
@@ -193,7 +242,7 @@ int main()
 
 
 	// Create a GLFWwindow object of 800 by 800 pixels, naming it "YoutubeOpenGL"
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Verve (x64) - Transformation test", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Verve (x64) Debug - Post-Processing test", NULL, NULL);
 
 	// Error check if the window fails to create
 	if (window == NULL)
@@ -219,6 +268,8 @@ int main()
 	// Generates Shader object using shaders defualt.vert and default.frag + light
 	Shader shaderProgram("default.vert", "default.frag");
 	Shader outliningProgram("outlining.vert", "outlining.frag");
+	Shader skyboxShader("skybox.vert", "skybox.frag");
+	Shader framebufferProgram("framebuffer.vert", "framebuffer.frag");
 	// Store mesh data in vectors for the mesh
 	//std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
 	//std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
@@ -261,6 +312,8 @@ int main()
 	baseModel = glm::translate(baseModel, basePos);
 
 
+	// gamma correction value
+	float gamma = 2.2f;
 
 	// Activating light shader program and model shader program
 	lightShader.Activate();
@@ -275,6 +328,14 @@ int main()
 	basePlaneShader.Activate();
 	glUniformMatrix4fv(glad_glGetUniformLocation(basePlaneShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(baseModel));
 	glUniform4f(glad_glGetUniformLocation(basePlaneShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
+
+	skyboxShader.Activate();
+	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
+
+	framebufferProgram.Activate();
+	glUniform1i(glGetUniformLocation(framebufferProgram.ID, "screenTexture"), 0);
+
+	
 
 
 	// TEXTURES STUFF (WIDTH, HEIGHT, COLOUR CHANNEL)
@@ -305,7 +366,7 @@ int main()
 
 	// (optional) set browser properties
 	fileDialog.SetTitle("title");
-	fileDialog.SetTypeFilters({ ".gltf", ".*" });
+	fileDialog.SetTypeFilters({ ".*", ".gltf" });
 
 
 	// Imgui variables and uniforms for shaders
@@ -330,6 +391,7 @@ int main()
 		    
 
 	//light
+	bool	hideLight = false;
 	bool	blinn = true;
 	int		blinnOn = 1;
 	float	amb  = 0.5f;
@@ -341,6 +403,18 @@ int main()
 	bool	textureBool = false;
 	int		textureOn = 1;
 	bool	wireframeMode = false;
+
+	bool	drawSkybox = true;
+
+	//combo box variables***
+	const char* items[] = { "Point", "Directional", "Spot" };
+	static const char* current_item = "Point";
+	int lightType = 0;
+
+
+	// post processing
+	bool	inverseColour = false;
+	int		option = 1;
 
 	// camera variables
 	float	backColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };	// this is mesh colour
@@ -388,6 +462,103 @@ int main()
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
 
+	glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
+
+
+
+
+	// MODEL LOADING
+	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
+	std::string modelPath = "Model/test/scene.gltf";
+
+	//Model model((modelPath).c_str());
+	// model object
+	Model* model;
+	model = new Model((modelPath).c_str());
+
+	// Create VAO, VBO, and EBO for the skybox
+	unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glGenBuffers(1, &skyboxEBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// All the faces of the cubemap (make sure they are in this exact order)
+	std::string facesCubemap[6] =
+	{
+		"Skybox/right.jpg",
+		"Skybox/left.jpg",
+		"Skybox/top.jpg",
+		"Skybox/bottom.jpg",
+		"Skybox/front.jpg",
+		"Skybox/back.jpg"
+	};
+
+	// Creates the cubemap texture object
+	unsigned int cubemapTexture;
+	glGenTextures(1, &cubemapTexture);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// These are very important to prevent seams
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	// This might help with seams on some systems
+	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	// Cycles through all the textures and attaches them to the cubemap object
+	for (unsigned int i = 0; i < 6; i++)
+	{
+		int width, height, nrChannels;
+		unsigned char* data = stbi_load(facesCubemap[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			stbi_set_flip_vertically_on_load(false);
+			glTexImage2D
+			(
+				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0,
+				GL_RGB,
+				width,
+				height,
+				0,
+				GL_RGB,
+				GL_UNSIGNED_BYTE,
+				data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Failed to load texture: " << facesCubemap[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+
+	// Prepare framebuffer rectangle VBO and VAO
+	unsigned int rectVAO, rectVBO;
+	glGenVertexArrays(1, &rectVAO);
+	glGenBuffers(1, &rectVBO);
+	glBindVertexArray(rectVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	
+
 	// Create Frame Buffer Object
 	unsigned int FBO;
 	glGenFramebuffers(1, &FBO);
@@ -411,27 +582,41 @@ int main()
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
-
-	//combo box variables
-	const char* items[] = { "Point", "Directional", "Spot" };
-	static const char* current_item = "Point";
-	int lightType = 0;
-
-
-	// MODEL LOADING
-	//std::string parentDir = (fs::current_path().fs::path::parent_path()).string();
-	std::string modelPath = "Model/test/scene.gltf";
-
-	//Model model((modelPath).c_str());
-	
-	Model* model;
-	model = new Model((modelPath).c_str());
+	// Error checking framebuffer
+	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer error: " << fboStatus << std::endl;
 
 
+	// Create Frame Buffer Object for POST PROCESSING
+	unsigned int postProcessingFBO;
+	glGenFramebuffers(1, &postProcessingFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFBO);
+
+	// Create Framebuffer Texture
+	unsigned int postProcessingTexture;
+	glGenTextures(1, &postProcessingTexture);
+	glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessingTexture, 0);
+
+	// Error checking framebuffer
+	fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Post-Processing Framebuffer error: " << fboStatus << std::endl;
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
+		
+
 		processInput(window);
 
 		//if (modelPath != "")
@@ -440,28 +625,65 @@ int main()
 		//	model1->Load((modelPath).c_str());
 		//	modelPath = "";
 		//}
-
+		
 		// Bind the custom framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
 		// Specify the color of the background
-		glClearColor(backColor[0], backColor[1], backColor[2], backColor[3]);
+		glClearColor(pow(backColor[0], gamma), pow(backColor[1], gamma), pow(backColor[2], gamma), backColor[3]);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+		//framebufferProgram.Activate();
 		glEnable(GL_DEPTH_TEST);
 
+		glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
+		
+		// Since the cubemap will always have a depth of 1.0, we need that equal sign so it doesn't get discarded
+		glDepthFunc(GL_LEQUAL);
+
+		skyboxShader.Activate();
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 projection = glm::mat4(1.0f);
+		// We make the mat4 into a mat3 and then a mat4 again in order to get rid of the last row and column
+		// The last row and column affect the translation of the skybox (which we don't want to affect)
+		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
+		projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		// Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
+		// where an object is present (a depth of 1.0f will always fail against any object's depth value)
+		if (drawSkybox)
+		{
+			glBindVertexArray(skyboxVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+		}
+		
+
+		// Switch back to the normal depth function
+		glDepthFunc(GL_LESS);
 
 		// Camera input handleing
 		camera.Inputs(window);
 
 		// Sending view and projection to shader
+		
 		camera.updateMatrix(field_of_view, near_plane, far_plane);
 
 		// draw the base plane
 		grid.DrawGrid(basePlaneShader, camera);
 
 		// Activate light shader program inside the main loop and draw the light source
-		lightMesh.DrawLight(lightShader, camera);
+		if (!hideLight)
+		{
+			lightMesh.DrawLight(lightShader, camera);
+		}
+		
+
 
 		// sending light data to light shader for before model loading
 		glUniform4f(glad_glGetUniformLocation(lightShader.ID, "lightColor"), lightColor[0], lightColor[1], lightColor[2], lightColor[3]);
@@ -472,6 +694,9 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
 		glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+		
+
+		
 
 		if (blinn)
 		{
@@ -510,6 +735,7 @@ int main()
 			// Draw the normal model
 			model->Draw(shaderProgram, camera);
 
+
 			// Make it so only the pixels without the value 1 pass the test
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
@@ -520,6 +746,8 @@ int main()
 			//glDisable(GL_DEPTH_TEST);
 	
 		}
+
+		
 
 		// for texture on and off
 		if (textureBool)
@@ -539,6 +767,17 @@ int main()
 		{
 			normalLoadedUniform = 0;
 		}
+
+		if (inverseColour)
+		{
+			option = 1;
+		}
+		else
+		{
+			option = 0;
+		}
+
+
 
 		// sending data to uniforms in shaders
 
@@ -574,7 +813,8 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "ry"), ry);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "rz"), rz);
 
-		
+		glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
+
 
 		// wireframe mode on/off
 		if (!wireframeMode)
@@ -585,7 +825,8 @@ int main()
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		
+
+		// model outlining should be at the very end of drawing process
 		if (modelOutline)
 		{
 			outliningProgram.Activate();
@@ -601,6 +842,16 @@ int main()
 
 			model->Draw(outliningProgram, camera);
 		}
+		
+
+		// Make it so the multisampling FBO is read while the post-processing FBO is drawn
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postProcessingFBO);
+		// Conclude the multisampling and copy it to the post-processing FBO
+		glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+
+		
 
 		
 
@@ -620,14 +871,6 @@ int main()
 		}
 		*/
 
-		
-
-		// Bind the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
-		glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-
-		
 
 		// Docking imgui
 		static bool dockingSpaceOpen = true;
@@ -682,6 +925,7 @@ int main()
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
+
 
 
 		if (ImGui::BeginMenuBar())
@@ -794,6 +1038,8 @@ int main()
 
 		}
 
+		
+
 		ImGui::Begin("Transformation");													// imgui begin and title
 		if (drawCube)
 		{
@@ -833,7 +1079,8 @@ int main()
 
 		//LIGHT
 		ImGui::Begin("Light");															// imgui begin and title
-
+		ImGui::Checkbox("Hide Light", &hideLight);
+		ImGui::SameLine();
 		ImGui::Checkbox("Blinn", &blinn);
 
 		ImGui::ColorEdit4("Light Color", lightColor);									// change colour
@@ -889,9 +1136,9 @@ int main()
 
 		if (ImGui::Button("Reset light values"))
 		{
-			lx = 1.0f;
-			ly = 1.0f;
-			lz = 1.0f;
+			lx = 0.0f;
+			ly = 0.0f;
+			lz = 0.0f;
 			amb = 0.5f;
 			spec = 0.5f;
 			specAmount = 16;
@@ -901,8 +1148,14 @@ int main()
 			//lightType = 0;
 		}
 
+		//POST PROCESSING
+		ImGui::Begin("Post-processing");
+		ImGui::Checkbox("Inverse Color", &inverseColour);
+		
+
 		//CAMERA
 		ImGui::Begin("Camera");													// imgui begin and title
+		ImGui::Checkbox("Skybox", &drawSkybox);
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.60f);
 		ImGui::ColorEdit4("Background Color", backColor);									// change colour
 		ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
@@ -928,6 +1181,9 @@ int main()
 
 		//std::cout << "Camera(" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
 
+		
+		ImGui::End();
+
 		ImGui::End();
 
 		ImGui::End(); //attributes
@@ -942,16 +1198,17 @@ int main()
 
 
 		//ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+		
 
 		ImGui::Render();
 
+		
 
-		glClearColor(0.160f, 0.160f, 0.160f, 1.0f);
+		glClearColor(pow(backColor[0], gamma), pow(backColor[1], gamma), pow(backColor[2], gamma), backColor[3]);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// Enable depth testing since it's disabled when drawing the framebuffer rectangle
-		//glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -961,7 +1218,18 @@ int main()
 		// Clear stencil buffer
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 		// Enable the depth buffer
-		//glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+
+		// Bind the default framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// Draw the framebuffer rectangle
+		framebufferProgram.Activate();
+		glBindVertexArray(rectVAO);
+		glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+		glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -978,15 +1246,20 @@ int main()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
+	
+
 	// Delete all the objects we've created
 	delete model;
 	delete normalMap;
 	shaderProgram.Delete();
 	outliningProgram.Delete();
+	framebufferProgram.Delete();
 	basePlaneShader.Delete();
 	lightShader.Delete();
-
+	
 	glDeleteFramebuffers(1, &FBO);
+	glDeleteFramebuffers(1, &postProcessingFBO);
+	
 
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
