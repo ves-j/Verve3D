@@ -36,7 +36,7 @@ There are two branches for this project:
   <li>PBR ❌</li>
 </ul> 
 
-<h2>HOW TO BUILD: (Visual Studio verison)</h2>
+<h2>HOW TO BUILD: (Visual Studio version)</h2>
 <ol>
   <li>Clone the repository</li>
   <li>Go to project property</li>
