@@ -1,5 +1,5 @@
 # Verve
-This is my first attempt at making a 3D rendering engine usgin OpenGL 3.3, GLFW and ImGui. </br>
+This is an attempt at developing a 3D rendering engine usgin OpenGL 3.3, GLFW and ImGui. </br>
 There are two branches for this project:
 <ul>
   <li>Main</li>
