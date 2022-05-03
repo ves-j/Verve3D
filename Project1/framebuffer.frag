@@ -5,6 +5,7 @@ in vec2 texCoords;
 
 uniform sampler2D screenTexture;
 uniform int option;
+uniform float gamma;
 
 vec4 inverseCol()
 {

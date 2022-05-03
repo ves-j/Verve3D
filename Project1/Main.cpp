@@ -51,6 +51,8 @@ GLuint indices[] =
 const GLuint SCR_WIDTH = 1600;
 const GLuint SCR_HEIGHT = 900;
 
+unsigned int samples = 8;
+
 float rectangleVertices[] =
 {
 	//  Coords   // texCoords
@@ -334,6 +336,7 @@ int main()
 
 	framebufferProgram.Activate();
 	glUniform1i(glGetUniformLocation(framebufferProgram.ID, "screenTexture"), 0);
+	glUniform1f(glGetUniformLocation(framebufferProgram.ID, "gamma"), gamma);
 
 	
 
@@ -345,6 +348,9 @@ int main()
 
 	// to invert texture as STB reads X and Y differently from GLFW
 	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_MULTISAMPLE);
+
 	// enabling stencil buffer for object outlining
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -369,12 +375,15 @@ int main()
 	fileDialog.SetTypeFilters({ ".*", ".gltf" });
 
 
+	
+
 	// Imgui variables and uniforms for shaders
 	bool	drawCube = false;
 	bool	modelOutline = false;
 	float	color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };	// this is mesh colour
 	float	size = 0.05f;
 	bool	normalLoaded = false;
+	float	outliningWidth = 0.1f;
 	std::string normalPath = "";
 	Texture* normalMap;
 	normalMap = new Texture((normalPath).c_str(), "normal", 1);
@@ -391,6 +400,7 @@ int main()
 		    
 
 	//light
+	bool	gammaCorrection = false;
 	bool	hideLight = false;
 	bool	blinn = true;
 	int		blinnOn = 1;
@@ -404,7 +414,7 @@ int main()
 	int		textureOn = 1;
 	bool	wireframeMode = false;
 
-	bool	drawSkybox = true;
+	
 
 	//combo box variables***
 	const char* items[] = { "Point", "Directional", "Spot" };
@@ -413,10 +423,13 @@ int main()
 
 
 	// post processing
+	bool	postFBO = false;
 	bool	inverseColour = false;
 	int		option = 1;
 
 	// camera variables
+	bool	drawSkybox = true;
+	bool	drawGrid = true;
 	float	backColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };	// this is mesh colour
 	float	field_of_view = 45.0f;
 	float	near_plane = 0.1f;
@@ -597,7 +610,7 @@ int main()
 	unsigned int postProcessingTexture;
 	glGenTextures(1, &postProcessingTexture);
 	glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -610,7 +623,16 @@ int main()
 		std::cout << "Post-Processing Framebuffer error: " << fboStatus << std::endl;
 
 
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Variables to create periodic event for FPS displaying
+	double prevTime = 0.0;
+	double crntTime = 0.0;
+	double timeDiff;
+	// Keeps track of the amount of frames in timeDiff
+	unsigned int counter = 0;
+
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -625,6 +647,27 @@ int main()
 		//	model1->Load((modelPath).c_str());
 		//	modelPath = "";
 		//}
+
+		// Updates counter and times
+		crntTime = glfwGetTime();
+		timeDiff = crntTime - prevTime;
+		counter++;
+
+		if (timeDiff >= 1.0 / 30.0)
+		{
+			// Creates new title
+			std::string FPS = std::to_string((1.0 / timeDiff) * counter);
+			std::string ms = std::to_string((timeDiff / counter) * 1000);
+			std::string newTitle = "Verve(x64) Debug - (Post-Processing test) " + FPS + "FPS";
+			glfwSetWindowTitle(window, newTitle.c_str());
+
+			// Resets times and counter
+			prevTime = crntTime;
+			counter = 0;
+
+			// Use this if you have disabled VSync
+			//camera.Inputs(window);
+		}
 		
 		// Bind the custom framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -641,6 +684,8 @@ int main()
 		
 		// Since the cubemap will always have a depth of 1.0, we need that equal sign so it doesn't get discarded
 		glDepthFunc(GL_LEQUAL);
+
+		
 
 		skyboxShader.Activate();
 		glm::mat4 view = glm::mat4(1.0f);
@@ -674,8 +719,12 @@ int main()
 		
 		camera.updateMatrix(field_of_view, near_plane, far_plane);
 
-		// draw the base plane
-		grid.DrawGrid(basePlaneShader, camera);
+		if (drawGrid)
+		{
+			// draw the base plane
+			grid.DrawGrid(basePlaneShader, camera);
+		}
+		
 
 		// Activate light shader program inside the main loop and draw the light source
 		if (!hideLight)
@@ -718,11 +767,22 @@ int main()
 			glDisable(GL_CULL_FACE);
 		}
 
+
+		
+		shaderProgram.Activate();
+
+		if (normalLoaded)
+		{
+			normalMap->Bind();
+			glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 1);
+		}
 		
 		
 		// if drawCube is true draw the cube
 		if (drawCube)
 		{
+			
+			
 			// Draw primitives, number of indices, datatype of indices, index of indices
 			//floor.Draw(shaderProgram, camera);
 
@@ -746,7 +806,6 @@ int main()
 			//glDisable(GL_DEPTH_TEST);
 	
 		}
-
 		
 
 		// for texture on and off
@@ -796,6 +855,7 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "specLight"), spec);
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
+		glUniform1f(glad_glGetUniformLocation(framebufferProgram.ID, "gamma"), gamma);
 
 
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
@@ -815,22 +875,13 @@ int main()
 
 		glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
 
-
-		// wireframe mode on/off
-		if (!wireframeMode)
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
-		else
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		}
+		
 
 		// model outlining should be at the very end of drawing process
 		if (modelOutline)
 		{
 			outliningProgram.Activate();
-			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "outlining"), 0.1f);
+			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "outlining"), outliningWidth);
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "size"), size);
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "px"), px);
 			glUniform1f(glad_glGetUniformLocation(outliningProgram.ID, "py"), py);
@@ -842,17 +893,43 @@ int main()
 
 			model->Draw(outliningProgram, camera);
 		}
+
+		// wireframe mode on/off
+		if (!wireframeMode)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		else
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+
+		
+		if (postFBO)
+		{
+			// Make it so the multisampling FBO is read while the post-processing FBO is drawn
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postProcessingFBO);
+
+		}
+		else
+		{
+			// Bind the default framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
 		
 
-		// Make it so the multisampling FBO is read while the post-processing FBO is drawn
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postProcessingFBO);
-		// Conclude the multisampling and copy it to the post-processing FBO
-		glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+		if (gammaCorrection)
+		{
+			glEnable(GL_FRAMEBUFFER_SRGB);
+		}
+		else
+		{
+			glDisable(GL_FRAMEBUFFER_SRGB);
+		}
 
 		
-
 		
 
 		//Imgui frames
@@ -860,6 +937,8 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+
+		
 
 
 		/* //Simple timer
@@ -988,12 +1067,17 @@ int main()
 			ImGui::Checkbox("Texture", &textureBool);									// enable texture														// draw the next component on the same line and previous
 			ImGui::Checkbox("Wireframe Mode", &wireframeMode);							// enable wireframe mode
 			ImGui::Checkbox("Model outline", &modelOutline);							// chnga model colour
+			if (modelOutline)
+			{
+				ImGui::DragFloat("Outline width ", &outliningWidth, 0.01f, 0.0f, 1.0f);
+			}
 			ImGui::ColorEdit4("Color", color);											// change colour
 
 
 			//ImGui::ColorEdit4("Light color", lightColor);								// change light colour
 
 
+			// load normal map
 			if (ImGui::Button("Load Normal Texture"))
 			{
 				fileDialog.Open();
@@ -1009,14 +1093,14 @@ int main()
 				normalLoaded = false;
 				drawCube = false;
 
-				// load new model path
+				// load new normal path
 				normalPath = fileDialog.GetSelected().string();
 				std::cout << "\nNormal map path before edit: " << normalPath << std::endl;
 				std::replace(normalPath.begin(), normalPath.end(), '\\', '/');
 				std::cout << "Normal map path after edit: " << normalPath << std::endl;
 				normalMap = new Texture((normalPath).c_str(), "normal", 1);
 				normalMap->Bind();
-				glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normal0"), 1);
+				glUniform1i(glGetUniformLocation(shaderProgram.ID, "normal0"), 1);
 				normalLoaded = true;
 				drawCube = true;
 
@@ -1077,11 +1161,15 @@ int main()
 			}
 		}
 
+		
+
 		//LIGHT
 		ImGui::Begin("Light");															// imgui begin and title
 		ImGui::Checkbox("Hide Light", &hideLight);
 		ImGui::SameLine();
 		ImGui::Checkbox("Blinn", &blinn);
+		ImGui::SameLine();
+		ImGui::Checkbox("Gamma Correction", &gammaCorrection);
 
 		ImGui::ColorEdit4("Light Color", lightColor);									// change colour
 
@@ -1127,7 +1215,7 @@ int main()
 
 		ImGui::DragFloat("Ambient", &amb, 0.1f, 0.1f);									// change ambient
 		ImGui::DragFloat("Specular light", &spec, 0.1f, 0.1f);							// change specular light
-		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 512);						// change specular light
+		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 512);						// change specular amount
 
 		if (current_item == "Spot")
 		{
@@ -1150,12 +1238,18 @@ int main()
 
 		//POST PROCESSING
 		ImGui::Begin("Post-processing");
-		ImGui::Checkbox("Inverse Color", &inverseColour);
+		ImGui::Checkbox("postFBO", &postFBO);
+		if (postFBO)
+		{
+			ImGui::Checkbox("Inverse Color", &inverseColour);
+		}
 		
 
 		//CAMERA
 		ImGui::Begin("Camera");													// imgui begin and title
 		ImGui::Checkbox("Skybox", &drawSkybox);
+		ImGui::SameLine();
+		ImGui::Checkbox("Grid", &drawGrid);
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.60f);
 		ImGui::ColorEdit4("Background Color", backColor);									// change colour
 		ImGui::SliderFloat("Field of view", &field_of_view, 10.0f, 100.0f);			// field of view slider
@@ -1182,6 +1276,8 @@ int main()
 		//std::cout << "Camera(" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
 
 		
+		
+		
 		ImGui::End();
 
 		ImGui::End();
@@ -1204,6 +1300,7 @@ int main()
 
 		
 
+		
 		glClearColor(pow(backColor[0], gamma), pow(backColor[1], gamma), pow(backColor[2], gamma), backColor[3]);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1220,16 +1317,26 @@ int main()
 		// Enable the depth buffer
 		glEnable(GL_DEPTH_TEST);
 
-		// Bind the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// Draw the framebuffer rectangle
-		framebufferProgram.Activate();
-		glBindVertexArray(rectVAO);
-		glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
-		glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		
+		if (postFBO)
+		{
+			// Bind the default framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			// Draw the framebuffer rectangle
+			framebufferProgram.Activate();
+			glBindVertexArray(rectVAO);
+			glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+			glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
+
+			glUniform1i(glad_glGetUniformLocation(framebufferProgram.ID, "option"), option);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+			glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+		}
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);

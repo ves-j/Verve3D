@@ -20,9 +20,6 @@ public:
 	// Initializes the mesh
 	Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::vector <Texture>& textures);
 	Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices);
-
-
-
 	// Draws the mesh
 	void Draw
 	(
@@ -38,5 +35,6 @@ public:
 	void DrawLight(Shader& shader, Camera& camera);
 };
 #endif
+
 
 

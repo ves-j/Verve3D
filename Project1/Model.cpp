@@ -14,20 +14,6 @@ Model::Model(const char* file)
 	traverseNode(0);
 }
 
-void Model::Load(const char* file)
-{
-	// Make a JSON object
-	std::string text = get_file_contents(file);
-	JSON = json::parse(text);
-
-	// Get the binary data
-	Model::file = file;
-	data = getData();
-
-	// Traverse all nodes
-	traverseNode(0);
-}
-
 void Model::Draw(Shader& shader, Camera& camera)
 {
 	// Go over all meshes and draw each one
@@ -69,17 +55,15 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 
 	// Get translation if it exists
 	glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
-	/*if (node.find("translation") != node.end())
+	if (node.find("translation") != node.end())
 	{
 		float transValues[3];
 		for (unsigned int i = 0; i < node["translation"].size(); i++)
 			transValues[i] = (node["translation"][i]);
 		translation = glm::make_vec3(transValues);
-	}*/
-	
-
+	}
 	// Get quaternion if it exists
-	glm::quat rotation = glm::quat(0.0f, 0.0f, 0.0f, 0.0f);
+	glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	if (node.find("rotation") != node.end())
 	{
 		float rotValues[4] =
@@ -91,28 +75,24 @@ void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
 		};
 		rotation = glm::make_quat(rotValues);
 	}
-
-
 	// Get scale if it exists
 	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-	/*if (node.find("scale") != node.end())
+	if (node.find("scale") != node.end())
 	{
 		float scaleValues[3];
 		for (unsigned int i = 0; i < node["scale"].size(); i++)
 			scaleValues[i] = (node["scale"][i]);
 		scale = glm::make_vec3(scaleValues);
-	}*/
-
-
+	}
 	// Get matrix if it exists
 	glm::mat4 matNode = glm::mat4(1.0f);
-	/*if (node.find("matrix") != node.end())
+	if (node.find("matrix") != node.end())
 	{
 		float matValues[16];
 		for (unsigned int i = 0; i < node["matrix"].size(); i++)
 			matValues[i] = (node["matrix"][i]);
 		matNode = glm::make_mat4(matValues);
-	}*/
+	}
 
 	// Initialize matrices
 	glm::mat4 trans = glm::mat4(1.0f);
@@ -277,7 +257,7 @@ std::vector<Texture> Model::getTextures()
 		if (!skip)
 		{
 			// Load diffuse texture
-			if (texPath.find("baseColor") != std::string::npos || texPath.find("diffuse") != std::string::npos || texPath.find("diff") != std::string::npos || texPath.find("albedo") != std::string::npos)
+			if (texPath.find("baseColor") != std::string::npos || texPath.find("diffuse") != std::string::npos || texPath.find("albedo") != std::string::npos)
 			{
 				Texture diffuse = Texture((fileDirectory + texPath).c_str(), "diffuse", loadedTex.size());
 				textures.push_back(diffuse);
@@ -285,21 +265,13 @@ std::vector<Texture> Model::getTextures()
 				loadedTexName.push_back(texPath);
 			}
 			// Load specular texture
-			else if (texPath.find("metallicRoughness") != std::string::npos || texPath.find("specular") != std::string::npos || texPath.find("arm") != std::string::npos)
+			else if (texPath.find("metallicRoughness") != std::string::npos || texPath.find("specular") != std::string::npos)
 			{
 				Texture specular = Texture((fileDirectory + texPath).c_str(), "specular", loadedTex.size());
 				textures.push_back(specular);
 				loadedTex.push_back(specular);
 				loadedTexName.push_back(texPath);
 			}
-			// Load normal maps
-			/*else if (texPath.find("normal") != std::string::npos)
-			{
-				Texture normalMap = Texture((fileDirectory + texPath).c_str(), "normal", 1);
-				textures.push_back(normalMap);
-				loadedTex.push_back(normalMap);
-				loadedTexName.push_back(texPath);
-			}*/
 		}
 	}
 
