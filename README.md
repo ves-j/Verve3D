@@ -15,7 +15,8 @@ There are two branches for this project:
 ![Screenshot001](https://user-images.githubusercontent.com/69974236/165810380-464be3af-aa6d-4a5f-997a-d87dcd8fdaa3.jpg)
 ![helmet_normal map](https://user-images.githubusercontent.com/69974236/164246533-dc60c52b-52f3-467e-8aa4-9f7e719e9fdb.jpg)
 ![Screenshot005](https://user-images.githubusercontent.com/69974236/165741563-51a7a6ee-87de-4718-a089-680b0fc859a0.jpg)
-![Screenshot007](https://user-images.githubusercontent.com/69974236/165741576-42c73bf7-303d-49f4-b630-6053402b7b52.jpg)
+![Screenshot014](https://user-images.githubusercontent.com/69974236/168178959-fa577c89-606a-4468-904f-6af6deb46b97.jpg)
+![Screenshot012](https://user-images.githubusercontent.com/69974236/168178054-b2a254c1-a124-4e16-8175-1d841b8d3c1e.jpg)
 
 <h2>TODO:</h2>
 
