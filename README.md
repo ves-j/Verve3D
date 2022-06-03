@@ -1,5 +1,10 @@
 # Verve
-This is an attempt at developing a 3D rendering engine usgin OpenGL 3.3, GLFW and ImGui. </br>
+
+
+<p align="center">
+  <img width="472" height="265.3" src="https://user-images.githubusercontent.com/69974236/171967841-561a15a9-631d-4ccc-a880-1e940f2a4669.jpg">
+</p>
+This is an attempt at developing a 3D rendering engine using OpenGL 3.3, GLFW and ImGui. </br>
 There are two branches for this project:
 <ul>
   <li>Main</li>
