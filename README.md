@@ -40,7 +40,7 @@ There are two branches for this project:
   <li>Skybox ✔️</li>
   <li>Post-processing and FBO ✔️</li>
   <li>HDR 🚧</li>
-  <li>Scene graph</li>
+  <li>Scene graph ❌</li>
   <li>PBR ❌</li>
 </ul> 
 
