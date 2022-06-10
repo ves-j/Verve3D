@@ -40,8 +40,11 @@ There are two branches for this project:
   <li>Skybox ✔️</li>
   <li>Post-processing and FBO ✔️</li>
   <li>HDR 🚧</li>
+  <li>Bloom ❌</li>
   <li>Scene graph ❌</li>
   <li>PBR ❌</li>
+  <li>Water Simulation ❌</li>
+  <li>RayTracing ❌</li>
 </ul> 
 
 <h2>HOW TO BUILD: (Visual Studio version)</h2>
