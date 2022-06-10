@@ -39,6 +39,8 @@ uniform float specLight;	//specular
 uniform float outerConeM;	//specular
 uniform int	  spPower;
 uniform int	  blinn;		//blinn phong light
+uniform int	  diffOn;
+uniform float diff;
 
 uniform int   normalLoaded;
 
@@ -69,7 +71,18 @@ vec4 pointLight()
 		normal = normalize(Normal);
 	}
 	vec3 lightDirection = normalize(lightVec);
-	float diffuse = max(dot(normal, lightDirection), 0.0f);
+	//max(dot(normal, lightDirection), 0.0f);
+
+	float diffuse;
+	if(diffOn == 1)
+	{
+		diffuse = diff;
+	}
+	else
+	{
+		diffuse = max(dot(normal, lightDirection), 0.0f);
+	}
+	
 
 	// specular lighting
 	float specular = 0.0f;
@@ -114,7 +127,16 @@ vec4 direcLight()
 		normal = normalize(Normal);
 	}
 	vec3 lightDirection = normalize(lightVec); //vec3(1.0f, 1.0f, 0.0f)
-	float diffuse = max(dot(normal, lightDirection), 0.0f);
+
+	float diffuse;
+	if(diffOn == 1)
+	{
+		diffuse = diff;
+	}
+	else
+	{
+		diffuse = max(dot(normal, lightDirection), 0.0f);
+	}
 
 	// specular lighting
 	float specular = 0.0f;
@@ -161,7 +183,16 @@ vec4 spotLight()
 		normal = normalize(Normal);
 	}
 	vec3 lightDirection = normalize(lightPos - crntPos);
-	float diffuse = max(dot(normal, lightDirection), 0.0f);
+
+	float diffuse;
+	if(diffOn == 1)
+	{
+		diffuse = diff;
+	}
+	else
+	{
+		diffuse = max(dot(normal, lightDirection), 0.0f);
+	}
 
 	// specular lighting
 	float specular = 0.0f;

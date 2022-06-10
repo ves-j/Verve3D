@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include <stb/stb_image_write.h>
 
 #include"Mesh.h"
 #include"Model.h"
@@ -226,6 +226,8 @@ ImGui::FileBrowser fileDialog;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+
+
 
 // MAIN FUNCTION
 int main()
@@ -461,6 +463,9 @@ int main()
 	float	spec = 0.5f;
 	int		specAmount = 16;
 	float	outerCone = 0.90f;
+	bool	diffActivate = false;
+	int		diffOn = 0;
+	float	diff = 0;
 
 	int		normalLoadedUniform = 0;	// checking if normal texture is loaded and sending in shader
 	bool	textureBool = false;
@@ -527,6 +532,7 @@ int main()
 	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+	glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "diff"), diff);
 
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "textureOn"), textureOn);
 	glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
@@ -614,6 +620,8 @@ int main()
 		}
 	}
 
+
+
 	// Prepare framebuffer rectangle VBO and VAO
 	unsigned int rectVAO, rectVBO;
 	glGenVertexArrays(1, &rectVAO);
@@ -661,7 +669,7 @@ int main()
 	unsigned int postProcessingFBO;
 	glGenFramebuffers(1, &postProcessingFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFBO);
-	
+
 	// Create Framebuffer Texture
 	unsigned int postProcessingTexture;
 	glGenTextures(1, &postProcessingTexture);
@@ -798,6 +806,7 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
 		glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "diffOn"), diffOn);
 		
 
 		
@@ -809,6 +818,15 @@ int main()
 		else
 		{
 			blinnOn = 0;
+		}
+
+		if (diffActivate)
+		{
+			diffOn = 1;
+		}
+		else
+		{
+			diffOn = 0;
 		}
 
 		if (faceCull)
@@ -897,6 +915,7 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(lightShader.ID, "lz"), lz);
 		glUniform3f(glad_glGetUniformLocation(shaderProgram.ID, "lightPos"), lx, ly, lz);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "blinn"), blinnOn);
+		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "diffOn"), diffOn);
 
 
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "amb"), amb);
@@ -904,6 +923,7 @@ int main()
 		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "outerConeM"), outerCone);
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "spPower"), specAmount);
 		glUniform1f(glad_glGetUniformLocation(framebufferProgram.ID, "gamma"), gamma);
+		glUniform1f(glad_glGetUniformLocation(shaderProgram.ID, "diff"), diff);
 
 
 		glUniform1i(glad_glGetUniformLocation(shaderProgram.ID, "normalLoaded"), normalLoadedUniform);
@@ -952,22 +972,6 @@ int main()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 
-		
-		if (option != 0)
-		{
-			// Make it so the multisampling FBO is read while the post-processing FBO is drawn
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, postProcessingFBO);
-
-		}
-		else
-		{
-			// Bind the default framebuffer
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
-		
-
-
 		if (gammaCorrection)
 		{
 			glEnable(GL_FRAMEBUFFER_SRGB);
@@ -976,6 +980,23 @@ int main()
 		{
 			glDisable(GL_FRAMEBUFFER_SRGB);
 		}
+
+		
+		
+		if (option != 0)
+		{
+			// Make it so the multisampling FBO is read while the post-processing FBO is drawn
+			glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+			glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFBO);
+
+		}
+		else
+		{
+			// Bind the default framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			
+		}
+
 
 		
 		
@@ -1052,7 +1073,6 @@ int main()
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
-
 
 
 		if (ImGui::BeginMenuBar())
@@ -1218,6 +1238,7 @@ int main()
 		ImGui::Checkbox("Blinn", &blinn);
 		ImGui::SameLine();
 		ImGui::Checkbox("Gamma Correction", &gammaCorrection);
+		ImGui::Checkbox("Active diffuse", &diffActivate);
 
 		ImGui::ColorEdit4("Light Color", lightColor);									// change colour
 
@@ -1261,6 +1282,11 @@ int main()
 			lightType = 0;
 		}
 
+		if (diffActivate)
+		{
+			ImGui::DragFloat("Diffuse", &diff, 0.1f, 0.1f);								// change diffuse
+		}
+										
 		ImGui::DragFloat("Ambient", &amb, 0.1f, 0.1f);									// change ambient
 		ImGui::DragFloat("Specular light", &spec, 0.1f, 0.1f);							// change specular light
 		ImGui::DragInt("Specular amount", &specAmount, 2, 1, 512);						// change specular amount
@@ -1279,6 +1305,7 @@ int main()
 			spec = 0.5f;
 			specAmount = 16;
 			outerCone = 0.90f;
+			diff = 0.0f;
 
 			//current_item = "Point";
 			//lightType = 0;
@@ -1356,7 +1383,7 @@ int main()
 		// camera.width and camera.height??? show the actual size of the object??? RESPONSIVEEEE???
 		//ImVec2 wsize = ImGui::GetWindowSize(); // x and y
 
-		ImGui::Image((void*)framebufferTexture, ImVec2(w / 1.1, h - 55), ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image((void*)framebufferTexture, ImVec2(w/1.1, h-55), ImVec2(0, 1), ImVec2(1, 0));
 
 		//std::cout << "Camera(" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
 

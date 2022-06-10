@@ -66,7 +66,7 @@ vec4 emboss()
     return (vec4(color, 1.0f));
 }
 
-vec4 testEffect()
+vec4 outline()
 {
     float testKernel[9] = float[](
         -1, -1, -1,
@@ -84,33 +84,77 @@ void main()
 { 
     if(option == 1)
     {
-        FragColor = inverseCol();
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            FragColor = inverseCol();
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
+        
     }
     if(option == 2)
     {
-        vec4 tex = texture(screenTexture, texCoords);
-        float average =  0.2126 * tex.r + 0.7152 * tex.g + 0.0722 * tex.b;
-        FragColor = vec4(average, average, average, 1.0);
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            vec4 tex = texture(screenTexture, texCoords);
+            float average =  0.2126 * tex.r + 0.7152 * tex.g + 0.0722 * tex.b;
+            FragColor = vec4(average, average, average, 1.0);
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
+        
     }
 
     if(option == 3)
     {
-        FragColor = blur();
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            FragColor = blur();
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
     }
 
     if(option == 4)
     {
-        FragColor = sharpen();
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            FragColor = sharpen();
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
     }
 
     if(option == 5)
     {
-        FragColor = emboss();
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            FragColor = emboss();
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
     }
 
     if(option == 6)
     {
-        FragColor = testEffect();
+        if(gl_FragCoord.x < 1262 && gl_FragCoord.x > 8 && gl_FragCoord.y < 854 && gl_FragCoord.y > 9)
+        {
+            FragColor = outline();
+        }
+        else
+        {
+            FragColor = texture(screenTexture, texCoords);
+        }
     }
 
     if(option == 0)
